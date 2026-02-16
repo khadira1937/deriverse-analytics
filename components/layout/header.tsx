@@ -24,6 +24,7 @@ import { Settings, Database, Orbit } from 'lucide-react';
 import { toast } from 'sonner';
 import { Logo } from './logo';
 import { DateRangePicker } from './date-range-picker';
+import { CsvImportDialog } from './csv-import-dialog';
 
 export function Header() {
   const pathname = usePathname();
@@ -54,7 +55,7 @@ export function Header() {
     const modeLabels: Record<DataMode, string> = {
       'demo': 'Demo Dataset',
       'csv': 'CSV Import',
-      'on-chain': 'On-chain Data',
+      'on-chain': 'Deriverse On-chain',
     };
     toast.info(`Switched to ${modeLabels[mode]}`);
   };
@@ -126,16 +127,21 @@ export function Header() {
             </div>
           </div>
 
-          {/* Solana Address Input */}
-          <Input
-            type="text"
-            placeholder="SOL address (base58)"
-            value={solanaAddress}
-            onChange={handleAddressChange}
-            className={`h-8 text-xs w-40 ${
-              !isAddressValid && solanaAddress ? 'border-red-500 focus:border-red-500' : ''
-            }`}
-          />
+          {/* CSV Import */}
+          {dataMode === 'csv' && <CsvImportDialog />}
+
+          {/* Solana Address Input (on-chain only) */}
+          {dataMode === 'on-chain' && (
+            <Input
+              type="text"
+              placeholder="SOL address (base58)"
+              value={solanaAddress}
+              onChange={handleAddressChange}
+              className={`h-8 text-xs w-40 ${
+                !isAddressValid && solanaAddress ? 'border-red-500 focus:border-red-500' : ''
+              }`}
+            />
+          )}
 
           {/* Symbol Filter */}
           <Select value={selectedSymbol || 'all'} onValueChange={(val) => setSelectedSymbol(val === 'all' ? null : val)}>

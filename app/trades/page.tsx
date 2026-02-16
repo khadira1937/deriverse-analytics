@@ -4,7 +4,7 @@ import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { ColumnDef } from '@tanstack/react-table';
 import { useAppContext } from '@/lib/context/app-context';
-import { DEMO_TRADES } from '@/lib/mock/trades';
+import { useTrades } from '@/hooks/use-trades';
 import { Trade, OrderSide, TradeOutcome } from '@/lib/types';
 import { DataTable } from '@/components/ui/data-table';
 import { Button } from '@/components/ui/button';
@@ -95,20 +95,64 @@ const columns: ColumnDef<Trade>[] = [
 ];
 
 export default function TradesPage() {
-  const { selectedSymbol, setSelectedSymbol } = useAppContext();
+  const { selectedSymbol } = useAppContext();
+  const { trades: normalizedTrades } = useTrades();
+
   const [filterSide, setFilterSide] = useState<OrderSide | 'all'>('all');
   const [filterOutcome, setFilterOutcome] = useState<TradeOutcome | 'all'>('all');
   const [filterOrderType, setFilterOrderType] = useState<string>('all');
 
+  // Convert normalized trades into the UI Trade model used by the table
+  const trades: Trade[] = useMemo(() => {
+    return normalizedTrades.map((t) => {
+      const entry = t.entryPrice ?? 0;
+      const exit = t.exitPrice ?? 0;
+      const size = t.size ?? 0;
+      const pnl = t.pnlUsd;
+      const pnlPercent = entry ? ((exit - entry) / entry) * 100 : 0;
+      const duration = t.durationSec ? t.durationSec / 3600 : 0;
+      const side: OrderSide = t.side === 'long' ? 'Long' : 'Short';
+      const orderType =
+        t.orderType === 'limit'
+          ? 'Limit'
+          : t.orderType === 'market'
+            ? 'Market'
+            : t.orderType === 'ioc'
+              ? 'IOC'
+              : t.orderType === 'post_only'
+                ? 'Post-only'
+                : 'Market';
+      const outcome: TradeOutcome = pnl > 0 ? 'Win' : pnl < 0 ? 'Loss' : 'Breakeven';
+
+      return {
+        id: t.id,
+        timestamp: t.ts,
+        symbol: t.symbol,
+        side,
+        entryPrice: entry,
+        exitPrice: exit,
+        size,
+        pnl,
+        pnlPercent,
+        fees: t.feesUsd,
+        duration,
+        orderType: orderType as any,
+        tags: t.tags ?? [],
+        notes: t.notes ?? '',
+        outcome,
+      };
+    });
+  }, [normalizedTrades]);
+
   const filteredTrades = useMemo(() => {
-    return DEMO_TRADES.filter((trade) => {
+    return trades.filter((trade) => {
       if (selectedSymbol && trade.symbol !== selectedSymbol) return false;
       if (filterSide !== 'all' && trade.side !== filterSide) return false;
       if (filterOutcome !== 'all' && trade.outcome !== filterOutcome) return false;
       if (filterOrderType !== 'all' && trade.orderType !== filterOrderType) return false;
       return true;
     });
-  }, [selectedSymbol, filterSide, filterOutcome, filterOrderType]);
+  }, [trades, selectedSymbol, filterSide, filterOutcome, filterOrderType]);
 
   const handleExport = () => {
     const csv = [
@@ -139,6 +183,33 @@ export default function TradesPage() {
     toast.success('Trades exported as CSV');
   };
 
+  const handleExportSummary = () => {
+    const summary = {
+      exportedAt: new Date().toISOString(),
+      filters: {
+        symbol: selectedSymbol,
+        side: filterSide,
+        outcome: filterOutcome,
+        orderType: filterOrderType,
+      },
+      tradeCount: filteredTrades.length,
+      totalPnL: filteredTrades.reduce((s, t) => s + t.pnl, 0),
+      totalFees: filteredTrades.reduce((s, t) => s + t.fees, 0),
+      winRate:
+        filteredTrades.length === 0
+          ? 0
+          : (filteredTrades.filter((t) => t.pnl > 0).length / filteredTrades.length) * 100,
+    };
+
+    const blob = new Blob([JSON.stringify(summary, null, 2)], { type: 'application/json' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `summary-${new Date().toISOString()}.json`;
+    a.click();
+    toast.success('Summary exported as JSON');
+  };
+
   return (
     <div className="min-h-screen p-6 pb-12">
       <div className="mx-auto max-w-7xl space-y-6">
@@ -150,7 +221,7 @@ export default function TradesPage() {
         >
           <h1 className="text-3xl font-bold text-white">Trade History</h1>
           <p className="text-sm text-white/60 mt-1">
-            Showing {filteredTrades.length} of {DEMO_TRADES.length} trades
+            Showing {filteredTrades.length} of {trades.length} trades
           </p>
         </motion.div>
 
@@ -199,15 +270,26 @@ export default function TradesPage() {
             </SelectContent>
           </Select>
 
-          <Button
-            size="sm"
-            variant="outline"
-            className="ml-auto gap-2 h-8 text-xs"
-            onClick={handleExport}
-          >
-            <Download className="w-3 h-3" />
-            Export CSV
-          </Button>
+          <div className="ml-auto flex gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-2 h-8 text-xs"
+              onClick={handleExportSummary}
+            >
+              <Download className="w-3 h-3" />
+              Export Summary
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-2 h-8 text-xs"
+              onClick={handleExport}
+            >
+              <Download className="w-3 h-3" />
+              Export CSV
+            </Button>
+          </div>
         </motion.div>
 
         {/* Data Table */}

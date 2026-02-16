@@ -33,14 +33,12 @@ function applySymbol(trades: NormalizedTrade[], symbol?: string | null) {
 }
 
 export function useTrades() {
-  const { dataMode, solanaAddress, selectedSymbol, dateRange } = useAppContext();
-  const [csvText, setCsvText] = useState<string>('');
+  const { dataMode, solanaAddress, selectedSymbol, dateRange, csvText, setCsvText } = useAppContext();
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [baseTrades, setBaseTrades] = useState<NormalizedTrade[]>([]);
 
-  // Phase A: provide a way to set CSV content later (Phase B will integrate UI)
   const setCsv = (text: string) => setCsvText(text);
 
   useEffect(() => {

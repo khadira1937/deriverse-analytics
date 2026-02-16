@@ -16,6 +16,11 @@ interface AppContextType {
   setSelectedSymbol: (symbol: string | null) => void;
   dateRange: { from: Date | undefined; to: Date | undefined };
   setDateRange: (range: { from: Date | undefined; to: Date | undefined }) => void;
+
+  // CSV mode
+  csvText: string;
+  setCsvText: (text: string) => void;
+  clearCsvText: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -30,6 +35,27 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     from: undefined,
     to: undefined,
   });
+
+  const [csvText, _setCsvText] = useState<string>(() => {
+    if (typeof window === 'undefined') return '';
+    return window.localStorage.getItem('derivision.csvText') ?? '';
+  });
+
+  const setCsvText = useCallback((text: string) => {
+    _setCsvText(text);
+    try {
+      window.localStorage.setItem('derivision.csvText', text);
+      window.localStorage.setItem('derivision.csvUpdatedAt', String(Date.now()));
+    } catch {}
+  }, []);
+
+  const clearCsvText = useCallback(() => {
+    _setCsvText('');
+    try {
+      window.localStorage.removeItem('derivision.csvText');
+      window.localStorage.setItem('derivision.csvUpdatedAt', String(Date.now()));
+    } catch {}
+  }, []);
 
   return (
     <AppContext.Provider
@@ -46,6 +72,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setSelectedSymbol,
         dateRange,
         setDateRange,
+        csvText,
+        setCsvText,
+        clearCsvText,
       }}
     >
       {children}
