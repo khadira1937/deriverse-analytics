@@ -25,6 +25,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useVirtualizer } from '@tanstack/react-virtual';
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -32,6 +33,11 @@ interface DataTableProps<TData, TValue> {
   onRowClick?: (row: TData) => void;
   pageSize?: number;
   filterPlaceholder?: string;
+
+  /** When true, render a virtualized (windowed) list of rows for huge datasets. */
+  virtualized?: boolean;
+  /** Height of the scroll container when virtualized. */
+  virtualizedHeight?: number;
 }
 
 export function DataTable<TData, TValue>({
@@ -40,6 +46,8 @@ export function DataTable<TData, TValue>({
   onRowClick,
   pageSize = 10,
   filterPlaceholder = 'Filter...',
+  virtualized = false,
+  virtualizedHeight = 560,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
@@ -49,7 +57,7 @@ export function DataTable<TData, TValue>({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
+    getPaginationRowModel: virtualized ? undefined : getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     onSortingChange: setSorting,
@@ -65,6 +73,16 @@ export function DataTable<TData, TValue>({
         pageSize,
       },
     },
+  });
+
+  const rows = virtualized ? table.getRowModel().rows : table.getRowModel().rows;
+
+  const parentRef = React.useRef<HTMLDivElement | null>(null);
+  const rowVirtualizer = useVirtualizer({
+    count: virtualized ? rows.length : 0,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 44,
+    overscan: 10,
   });
 
   return (
@@ -97,59 +115,104 @@ export function DataTable<TData, TValue>({
               </TableRow>
             ))}
           </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  className="border-white/5 hover:bg-white/5 transition-colors cursor-pointer"
-                  onClick={() => onRowClick?.(row.original)}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="text-xs py-2 px-4">
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
-            ) : (
-              <TableRow className="border-white/5">
-                <TableCell colSpan={columns.length} className="h-24 text-center text-white/40">
-                  No results found
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
         </Table>
+
+        {virtualized ? (
+          <div
+            ref={parentRef}
+            className="w-full overflow-auto"
+            style={{ height: virtualizedHeight }}
+          >
+            {rows.length ? (
+              <div className="relative w-full" style={{ height: rowVirtualizer.getTotalSize() }}>
+                {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                  const row = rows[virtualRow.index];
+                  const cells = row.getVisibleCells();
+                  return (
+                    <div
+                      key={row.id}
+                      className="absolute left-0 top-0 w-full border-b border-white/5 hover:bg-white/5 transition-colors cursor-pointer"
+                      style={{ transform: `translateY(${virtualRow.start}px)` }}
+                      onClick={() => onRowClick?.(row.original)}
+                    >
+                      <div
+                        className="grid"
+                        style={{ gridTemplateColumns: `repeat(${cells.length}, minmax(0, 1fr))` }}
+                      >
+                        {cells.map((cell) => (
+                          <div key={cell.id} className="text-xs py-2 px-4">
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="h-24 flex items-center justify-center text-white/40 text-sm">
+                No results found
+              </div>
+            )}
+          </div>
+        ) : (
+          <Table>
+            <TableBody>
+              {table.getRowModel().rows?.length ? (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    className="border-white/5 hover:bg-white/5 transition-colors cursor-pointer"
+                    onClick={() => onRowClick?.(row.original)}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id} className="text-xs py-2 px-4">
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow className="border-white/5">
+                  <TableCell colSpan={columns.length} className="h-24 text-center text-white/40">
+                    No results found
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        )}
       </div>
 
-      <div className="flex items-center justify-between">
-        <div className="text-xs text-white/60">
-          Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+      {!virtualized && (
+        <div className="flex items-center justify-between">
+          <div className="text-xs text-white/60">
+            Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+              className="h-8 gap-1 text-xs"
+            >
+              <ChevronLeft className="w-3 h-3" />
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+              className="h-8 gap-1 text-xs"
+            >
+              Next
+              <ChevronRight className="w-3 h-3" />
+            </Button>
+          </div>
         </div>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-            className="h-8 gap-1 text-xs"
-          >
-            <ChevronLeft className="w-3 h-3" />
-            Previous
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-            className="h-8 gap-1 text-xs"
-          >
-            Next
-            <ChevronRight className="w-3 h-3" />
-          </Button>
-        </div>
-      </div>
+      )}
     </div>
   );
 }

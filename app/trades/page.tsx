@@ -355,6 +355,8 @@ export default function TradesPage() {
             columns={columns}
             data={filteredTrades}
             pageSize={15}
+            virtualized={filteredTrades.length > 200}
+            virtualizedHeight={620}
             onRowClick={(row) => {
               setSelectedTrade(row);
               const ann = getAnn(row.id);

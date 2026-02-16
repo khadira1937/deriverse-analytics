@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAppContext } from '@/lib/context/app-context';
 import { DEMO_TRADES } from '@/lib/mock/trades';
 import { demoTradesToNormalized } from '@/lib/adapters/demo';
@@ -47,6 +47,9 @@ export function useTrades() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [baseTrades, setBaseTrades] = useState<NormalizedTrade[]>([]);
+  const [baseVersion, setBaseVersion] = useState(0);
+
+  const metricsCacheRef = useRef(new Map<string, ReturnType<typeof computeMetrics>>());
 
   const setCsv = (text: string) => setCsvText(text);
 
@@ -61,14 +64,20 @@ export function useTrades() {
       try {
         if (dataMode === 'demo') {
           const normalized = demoTradesToNormalized(DEMO_TRADES);
-          if (!cancelled) setBaseTrades(normalized);
+          if (!cancelled) {
+            setBaseTrades(normalized);
+            setBaseVersion((v) => v + 1);
+          }
           return;
         }
 
         if (dataMode === 'csv') {
           const parsed = parseTradesCsv(csvText);
           if (!parsed.ok) throw new Error(parsed.error);
-          if (!cancelled) setBaseTrades(parsed.trades);
+          if (!cancelled) {
+            setBaseTrades(parsed.trades);
+            setBaseVersion((v) => v + 1);
+          }
           return;
         }
 
@@ -76,6 +85,7 @@ export function useTrades() {
         if (onChainRunId === 0) {
           if (!cancelled) {
             setBaseTrades([]);
+            setBaseVersion((v) => v + 1);
             setError('Click Analyze to fetch on-chain data.');
           }
           return;
@@ -93,10 +103,14 @@ export function useTrades() {
         };
         const res = await fetchDeriverseTrades(env, trimmed);
         if (!res.ok) throw new Error(res.error);
-        if (!cancelled) setBaseTrades(res.trades);
+        if (!cancelled) {
+          setBaseTrades(res.trades);
+          setBaseVersion((v) => v + 1);
+        }
       } catch (e: any) {
         if (!cancelled) {
           setBaseTrades([]);
+          setBaseVersion((v) => v + 1);
           setError(e?.message ?? 'Failed to load trades');
         }
       } finally {
@@ -118,7 +132,28 @@ export function useTrades() {
     return applyDateRange(afterSymbol, dateRange.from, dateRange.to);
   }, [baseTrades, selectedSymbol, dateRange.from, dateRange.to]);
 
-  const metrics = useMemo(() => computeMetrics(filteredTrades), [filteredTrades]);
+  const metricsKey = useMemo(() => {
+    const from = dateRange.from ? dateRange.from.toISOString() : null;
+    const to = dateRange.to ? dateRange.to.toISOString() : null;
+    return JSON.stringify({ baseVersion, selectedSymbol: selectedSymbol ?? null, from, to });
+  }, [baseVersion, selectedSymbol, dateRange.from, dateRange.to]);
+
+  const metrics = useMemo(() => {
+    const cache = metricsCacheRef.current;
+    const hit = cache.get(metricsKey);
+    if (hit) return hit;
+
+    const computed = computeMetrics(filteredTrades);
+
+    cache.set(metricsKey, computed);
+    // simple LRU-ish cap
+    if (cache.size > 25) {
+      const firstKey = cache.keys().next().value;
+      if (firstKey) cache.delete(firstKey);
+    }
+
+    return computed;
+  }, [filteredTrades, metricsKey]);
 
   return {
     trades: filteredTrades,
