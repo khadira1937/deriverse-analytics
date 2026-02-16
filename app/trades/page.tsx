@@ -5,9 +5,14 @@ import { motion } from 'framer-motion';
 import { ColumnDef } from '@tanstack/react-table';
 import { useAppContext } from '@/lib/context/app-context';
 import { useTrades } from '@/hooks/use-trades';
+import { useTradeAnnotations } from '@/hooks/use-trade-annotations';
 import { Trade, OrderSide, TradeOutcome } from '@/lib/types';
 import { DataTable } from '@/components/ui/data-table';
 import { Button } from '@/components/ui/button';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -16,7 +21,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Card } from '@/components/ui/card';
-import { Download, Filter } from 'lucide-react';
+import { Download, Filter, Tags, NotebookPen } from 'lucide-react';
 import { toast } from 'sonner';
 
 const columns: ColumnDef<Trade>[] = [
@@ -97,6 +102,13 @@ const columns: ColumnDef<Trade>[] = [
 export default function TradesPage() {
   const { selectedSymbol } = useAppContext();
   const { trades: normalizedTrades } = useTrades();
+  const { get: getAnn, upsert: upsertAnn } = useTradeAnnotations();
+
+  const [selectedTrade, setSelectedTrade] = useState<Trade | null>(null);
+  const [annTags, setAnnTags] = useState('');
+  const [annNotes, setAnnNotes] = useState('');
+  const [annSetupType, setAnnSetupType] = useState('');
+  const [annMistakeType, setAnnMistakeType] = useState('');
 
   const [filterSide, setFilterSide] = useState<OrderSide | 'all'>('all');
   const [filterOutcome, setFilterOutcome] = useState<TradeOutcome | 'all'>('all');
@@ -124,6 +136,13 @@ export default function TradesPage() {
                 : 'Market';
       const outcome: TradeOutcome = pnl > 0 ? 'Win' : pnl < 0 ? 'Loss' : 'Breakeven';
 
+      const ann = getAnn(t.id);
+      const mergedTags = [
+        ...(t.tags ?? []),
+        ...(ann?.tags ?? []),
+      ].filter(Boolean);
+      const mergedNotes = ann?.notes?.trim?.() ? ann.notes : (t.notes ?? '');
+
       return {
         id: t.id,
         timestamp: t.ts,
@@ -137,12 +156,12 @@ export default function TradesPage() {
         fees: t.feesUsd,
         duration,
         orderType: orderType as any,
-        tags: t.tags ?? [],
-        notes: t.notes ?? '',
+        tags: mergedTags,
+        notes: mergedNotes,
         outcome,
       };
     });
-  }, [normalizedTrades]);
+  }, [normalizedTrades, getAnn]);
 
   const filteredTrades = useMemo(() => {
     return trades.filter((trade) => {
@@ -299,7 +318,79 @@ export default function TradesPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          <DataTable columns={columns} data={filteredTrades} pageSize={15} />
+          <DataTable
+            columns={columns}
+            data={filteredTrades}
+            pageSize={15}
+            onRowClick={(row) => {
+              setSelectedTrade(row);
+              const ann = getAnn(row.id);
+              setAnnTags((ann?.tags ?? row.tags ?? []).join(', '));
+              setAnnNotes(ann?.notes ?? row.notes ?? '');
+              setAnnSetupType(ann?.setupType ?? '');
+              setAnnMistakeType(ann?.mistakeType ?? '');
+            }}
+          />
+
+          <Drawer open={!!selectedTrade} onOpenChange={(o) => !o && setSelectedTrade(null)}>
+            <DrawerContent className="bg-black text-white border-white/10">
+              <div className="mx-auto w-full max-w-2xl p-4 space-y-4">
+                <DrawerHeader className="p-0">
+                  <DrawerTitle className="text-white">Trade Annotation</DrawerTitle>
+                  <div className="text-xs text-white/60 mt-1">
+                    {selectedTrade?.symbol} • {selectedTrade?.side} • {selectedTrade?.timestamp.toLocaleString()}
+                  </div>
+                </DrawerHeader>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-xs uppercase text-white/70">Setup</Label>
+                    <Input value={annSetupType} onChange={(e) => setAnnSetupType(e.target.value)} className="mt-1 h-9" placeholder="Breakout / Range / ..." />
+                  </div>
+                  <div>
+                    <Label className="text-xs uppercase text-white/70">Mistake</Label>
+                    <Input value={annMistakeType} onChange={(e) => setAnnMistakeType(e.target.value)} className="mt-1 h-9" placeholder="Over-trading / Emotional / ..." />
+                  </div>
+                </div>
+
+                <div>
+                  <Label className="text-xs uppercase text-white/70">Tags (comma separated)</Label>
+                  <Input value={annTags} onChange={(e) => setAnnTags(e.target.value)} className="mt-1 h-9" placeholder="scalp, A+, revenge" />
+                </div>
+
+                <div>
+                  <Label className="text-xs uppercase text-white/70">Notes</Label>
+                  <Textarea value={annNotes} onChange={(e) => setAnnNotes(e.target.value)} className="mt-1 min-h-28" placeholder="What happened? What to improve next time?" />
+                </div>
+
+                <div className="flex gap-2 justify-end">
+                  <Button variant="outline" className="h-9" onClick={() => setSelectedTrade(null)}>
+                    Close
+                  </Button>
+                  <Button
+                    className="h-9 bg-cyan-500 hover:bg-cyan-600 text-black"
+                    onClick={() => {
+                      if (!selectedTrade) return;
+                      const tags = annTags
+                        .split(/[,;]/g)
+                        .map((t) => t.trim())
+                        .filter(Boolean);
+                      upsertAnn(selectedTrade.id, {
+                        tags,
+                        notes: annNotes,
+                        setupType: annSetupType,
+                        mistakeType: annMistakeType,
+                      });
+                      toast.success('Annotation saved');
+                      setSelectedTrade(null);
+                    }}
+                  >
+                    Save
+                  </Button>
+                </div>
+              </div>
+            </DrawerContent>
+          </Drawer>
         </motion.div>
       </div>
     </div>

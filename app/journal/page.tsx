@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { DEMO_JOURNAL_ENTRIES } from '@/lib/mock/journal';
 import { JournalEntry } from '@/lib/types';
+import { useJournalEntries } from '@/hooks/use-journal-entries';
+import { useTrades } from '@/hooks/use-trades';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Plus, BarChart3, TrendingUp, AlertCircle } from 'lucide-react';
@@ -27,12 +28,19 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 
 export default function JournalPage() {
-  const [entries, setEntries] = useState<JournalEntry[]>(DEMO_JOURNAL_ENTRIES);
+  const { entries, add } = useJournalEntries();
+  const { trades } = useTrades();
+
   const [isOpen, setIsOpen] = useState(false);
   const [title, setTitle] = useState('');
   const [setupType, setSetupType] = useState('Breakout');
   const [confidence, setConfidence] = useState('5');
   const [notes, setNotes] = useState('');
+  const [symbolsRaw, setSymbolsRaw] = useState('');
+  const [mistakeType, setMistakeType] = useState('None');
+  const [linkedTradeIds, setLinkedTradeIds] = useState<string[]>([]);
+
+  const recentTrades = useMemo(() => trades.slice(0, 50), [trades]);
 
   const handleAddEntry = () => {
     if (!title.trim()) {
@@ -40,28 +48,36 @@ export default function JournalPage() {
       return;
     }
 
+    const symbols = symbolsRaw
+      .split(/[,;]/g)
+      .map((s) => s.trim())
+      .filter(Boolean);
+
     const newEntry: JournalEntry = {
       id: `entry-${Date.now()}`,
       timestamp: new Date(),
       title,
-      symbols: [],
+      symbols,
       setupType: setupType as any,
       confidence: parseInt(confidence),
       outcome: null,
-      mistakeType: 'None',
+      mistakeType: mistakeType as any,
       notes,
       tags: [],
-      linkedTradeIds: [],
+      linkedTradeIds,
     };
 
-    setEntries([newEntry, ...entries]);
+    add(newEntry);
     toast.success('Entry created successfully');
-    
+
     // Reset form
     setTitle('');
     setSetupType('Breakout');
     setConfidence('5');
     setNotes('');
+    setSymbolsRaw('');
+    setMistakeType('None');
+    setLinkedTradeIds([]);
     setIsOpen(false);
   };
 
@@ -148,6 +164,63 @@ export default function JournalPage() {
                       onChange={(e) => setConfidence(e.target.value)}
                       className="mt-1"
                     />
+                  </div>
+                </div>
+
+                <div>
+                  <Label className="text-xs uppercase text-white/70">Symbols (comma separated)</Label>
+                  <Input
+                    placeholder="SOL/USDC, BTC/USDC"
+                    value={symbolsRaw}
+                    onChange={(e) => setSymbolsRaw(e.target.value)}
+                    className="mt-1"
+                  />
+                </div>
+
+                <div>
+                  <Label className="text-xs uppercase text-white/70">Mistake Type</Label>
+                  <Select value={mistakeType} onValueChange={setMistakeType}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {['None', 'Over-trading', 'Missed TP', 'Wrong Entry', 'Bad Risk/Reward', 'Emotional'].map((type) => (
+                        <SelectItem key={type} value={type}>
+                          {type}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label className="text-xs uppercase text-white/70">Link Trades (optional)</Label>
+                  <div className="mt-2 max-h-40 overflow-auto rounded-md border border-white/10 bg-white/5">
+                    {recentTrades.length === 0 ? (
+                      <div className="p-3 text-xs text-white/60">No trades available in current filters.</div>
+                    ) : (
+                      recentTrades.map((t) => {
+                        const checked = linkedTradeIds.includes(t.id);
+                        return (
+                          <label key={t.id} className="flex items-center gap-2 px-3 py-2 text-xs border-b border-white/5 cursor-pointer hover:bg-white/5">
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={(e) => {
+                                setLinkedTradeIds((prev) =>
+                                  e.target.checked ? [...prev, t.id] : prev.filter((x) => x !== t.id),
+                                );
+                              }}
+                            />
+                            <span className="text-white/80">{t.symbol}</span>
+                            <span className="text-white/40">•</span>
+                            <span className="text-white/60">{t.side.toUpperCase()}</span>
+                            <span className="text-white/40">•</span>
+                            <span className="text-white/60">{t.ts.toLocaleString()}</span>
+                          </label>
+                        );
+                      })
+                    )}
                   </div>
                 </div>
 
