@@ -3,6 +3,9 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useTrades } from '@/hooks/use-trades';
+import { computeInsights } from '@/lib/insights/insights';
+import { EquityCurveChart } from '@/components/dashboard/equity-curve-chart';
+import { DailyPnLChart } from '@/components/dashboard/daily-pnl-chart';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Download, Copy, FileJson } from 'lucide-react';
@@ -22,9 +25,11 @@ export default function ReportsPage() {
   const kpis = metrics.kpis;
   const symbolPerformance = metrics.symbols;
   const dailyPnL = metrics.daily;
+  const insights = computeInsights({ trades, metrics });
 
   const handleExportPDF = () => {
-    toast.info('PDF export feature coming soon');
+    // Use browser print dialog (users can "Save as PDF")
+    window.print();
   };
 
   const handleCopyLink = () => {
@@ -38,8 +43,16 @@ export default function ReportsPage() {
       generated: new Date().toISOString(),
       period: 'Last 30 days',
       kpis,
-      symbolPerformance,
+      equityCurve: metrics.equityCurve,
       dailyPnL,
+      symbolPerformance,
+      feeComposition: metrics.feeComposition,
+      cumulativeFeesByDay: metrics.cumulativeFeesByDay,
+      orderTypePerformance: metrics.orderTypePerformance,
+      timeOfDay: metrics.timeOfDay,
+      sessionPerformance: metrics.sessionPerformance,
+      directionBias: metrics.directionBias,
+      insights,
     };
 
     const blob = new Blob([JSON.stringify(reportData, null, 2)], {
@@ -169,6 +182,56 @@ export default function ReportsPage() {
                   <p className="text-lg font-bold text-cyan-400 mt-1">{item.value}</p>
                 </div>
               ))}
+            </div>
+          </Card>
+
+          {/* Charts */}
+          <Card className="glass-panel border-white/10 p-6 print:break-inside-avoid">
+            <h3 className="text-lg font-semibold text-white mb-4">Equity Curve</h3>
+            <EquityCurveChart
+              data={metrics.equityCurve.map((p) => ({
+                timestamp: p.ts,
+                equity: p.equity,
+                cumPnL: p.cumPnL,
+                drawdown: p.drawdown,
+                maxDrawdown: p.maxDrawdown,
+              }))}
+            />
+          </Card>
+
+          <Card className="glass-panel border-white/10 p-6 print:break-inside-avoid">
+            <h3 className="text-lg font-semibold text-white mb-4">Daily P&L</h3>
+            <DailyPnLChart
+              data={metrics.daily.map((d) => ({
+                date: new Date(d.day),
+                pnl: d.pnl,
+                trades: d.trades,
+              }))}
+            />
+          </Card>
+
+          {/* Bonus Insights */}
+          <Card className="glass-panel border-white/10 p-6">
+            <h3 className="text-lg font-semibold text-white mb-4">Insights (Bonus)</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              <div className="rounded-md border border-white/10 p-3">
+                <div className="text-xs text-white/50">Max win streak</div>
+                <div className="text-lg font-bold text-white">{insights.streaks.maxWin}</div>
+              </div>
+              <div className="rounded-md border border-white/10 p-3">
+                <div className="text-xs text-white/50">Max loss streak</div>
+                <div className="text-lg font-bold text-white">{insights.streaks.maxLoss}</div>
+              </div>
+              <div className="rounded-md border border-white/10 p-3">
+                <div className="text-xs text-white/50">Overtrading days</div>
+                <div className="text-lg font-bold text-white">{insights.overtrading.flaggedDays.length}</div>
+              </div>
+              <div className="rounded-md border border-white/10 p-3">
+                <div className="text-xs text-white/50">Fees / gross profit</div>
+                <div className="text-lg font-bold text-white">
+                  {insights.feeDrag.grossProfit > 0 ? `${insights.feeDrag.feeToGrossProfitPct.toFixed(1)}%` : '—'}
+                </div>
+              </div>
             </div>
           </Card>
 

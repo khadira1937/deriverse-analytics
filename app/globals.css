@@ -131,3 +131,21 @@ body {
     @apply bg-white/10 rounded hover:bg-white/20;
   }
 }
+
+@media print {
+  body {
+    color-scheme: light;
+  }
+  header {
+    display: none !important;
+  }
+  .grid-bg {
+    display: none !important;
+  }
+  .glass-panel,
+  .glass-panel-sm {
+    background: white !important;
+    border-color: rgba(0, 0, 0, 0.12) !important;
+    box-shadow: none !important;
+  }
+}
