@@ -21,13 +21,21 @@ interface AppContextType {
   csvText: string;
   setCsvText: (text: string) => void;
   clearCsvText: () => void;
+
+  // On-chain mode
+  onChainRunId: number;
+  runOnChain: () => void;
+  onChainLoading: boolean;
+  setOnChainLoading: (v: boolean) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [dataMode, setDataMode] = useState<DataMode>('demo');
-  const [solanaAddress, setSolanaAddress] = useState('');
+  const [solanaAddress, setSolanaAddress] = useState(
+    (process.env.NEXT_PUBLIC_DEFAULT_TRADER_ADDRESS as string | undefined) ?? '',
+  );
   const [showGridBackground, setShowGridBackground] = useState(true);
   const [isCompactMode, setIsCompactMode] = useState(false);
   const [selectedSymbol, setSelectedSymbol] = useState<string | null>(null);
@@ -57,6 +65,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     } catch {}
   }, []);
 
+  const [onChainRunId, setOnChainRunId] = useState(0);
+  const runOnChain = useCallback(() => setOnChainRunId((x) => x + 1), []);
+
+  const [onChainLoading, setOnChainLoading] = useState(false);
+
   return (
     <AppContext.Provider
       value={{
@@ -75,6 +88,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         csvText,
         setCsvText,
         clearCsvText,
+        onChainRunId,
+        runOnChain,
+        onChainLoading,
+        setOnChainLoading,
       }}
     >
       {children}

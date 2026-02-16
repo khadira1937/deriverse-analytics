@@ -33,7 +33,16 @@ function applySymbol(trades: NormalizedTrade[], symbol?: string | null) {
 }
 
 export function useTrades() {
-  const { dataMode, solanaAddress, selectedSymbol, dateRange, csvText, setCsvText } = useAppContext();
+  const {
+    dataMode,
+    solanaAddress,
+    selectedSymbol,
+    dateRange,
+    csvText,
+    setCsvText,
+    onChainRunId,
+    setOnChainLoading,
+  } = useAppContext();
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -47,6 +56,7 @@ export function useTrades() {
     async function load() {
       setLoading(true);
       setError(null);
+      if (dataMode === 'on-chain') setOnChainLoading(true);
 
       try {
         if (dataMode === 'demo') {
@@ -62,7 +72,15 @@ export function useTrades() {
           return;
         }
 
-        // on-chain
+        // on-chain (only fetch when user explicitly runs analyze)
+        if (onChainRunId === 0) {
+          if (!cancelled) {
+            setBaseTrades([]);
+            setError('Click Analyze to fetch on-chain data.');
+          }
+          return;
+        }
+
         const trimmed = (solanaAddress ?? '').trim();
         if (!trimmed) throw new Error('Please enter a Solana address.');
         if (!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(trimmed)) {
@@ -82,7 +100,10 @@ export function useTrades() {
           setError(e?.message ?? 'Failed to load trades');
         }
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+          if (dataMode === 'on-chain') setOnChainLoading(false);
+        }
       }
     }
 
@@ -90,7 +111,7 @@ export function useTrades() {
     return () => {
       cancelled = true;
     };
-  }, [dataMode, solanaAddress, csvText]);
+  }, [dataMode, solanaAddress, csvText, onChainRunId, setOnChainLoading]);
 
   const filteredTrades = useMemo(() => {
     const afterSymbol = applySymbol(baseTrades, selectedSymbol);

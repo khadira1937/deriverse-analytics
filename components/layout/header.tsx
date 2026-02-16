@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Settings, Database, Orbit } from 'lucide-react';
+import { Settings, Database, Orbit, Loader2, Play } from 'lucide-react';
 import { toast } from 'sonner';
 import { Logo } from './logo';
 import { DateRangePicker } from './date-range-picker';
@@ -35,6 +35,8 @@ export function Header() {
     setSolanaAddress,
     selectedSymbol,
     setSelectedSymbol,
+    runOnChain,
+    onChainLoading,
   } = useAppContext();
   const [isAddressValid, setIsAddressValid] = useState(true);
 
@@ -135,15 +137,36 @@ export function Header() {
 
           {/* Solana Address Input (on-chain only) */}
           {dataMode === 'on-chain' && (
-            <Input
-              type="text"
-              placeholder="SOL address (base58)"
-              value={solanaAddress}
-              onChange={handleAddressChange}
-              className={`h-8 text-xs w-40 ${
-                !isAddressValid && solanaAddress ? 'border-red-500 focus:border-red-500' : ''
-              }`}
-            />
+            <div className="flex items-center gap-2">
+              <Input
+                type="text"
+                placeholder="SOL address (base58)"
+                value={solanaAddress}
+                onChange={handleAddressChange}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && isAddressValid && solanaAddress.trim()) {
+                    runOnChain();
+                  }
+                }}
+                className={`h-8 text-xs w-56 ${
+                  !isAddressValid && solanaAddress ? 'border-red-500 focus:border-red-500' : ''
+                }`}
+              />
+
+              <Button
+                size="sm"
+                className="h-8 text-xs bg-cyan-500 hover:bg-cyan-600 text-black gap-2"
+                disabled={!isAddressValid || !solanaAddress.trim() || onChainLoading}
+                onClick={() => runOnChain()}
+              >
+                {onChainLoading ? (
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                ) : (
+                  <Play className="w-3 h-3" />
+                )}
+                Analyze
+              </Button>
+            </div>
           )}
 
           {/* Symbol Filter */}
