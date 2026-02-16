@@ -106,8 +106,12 @@ const columns: ColumnDef<Trade>[] = [
       if (!tags.length) return <span className="text-white/30">—</span>;
       return (
         <div className="flex flex-wrap gap-1">
-          {tags.slice(0, 3).map((t) => (
-            <Badge key={t} variant="outline" className="h-5 px-1.5 text-[10px] border-cyan-400/30 text-cyan-200">
+          {tags.slice(0, 3).map((t, i) => (
+            <Badge
+              key={`${t}-${i}`}
+              variant="outline"
+              className="h-5 px-1.5 text-[10px] border-cyan-400/30 text-cyan-200"
+            >
               {t}
             </Badge>
           ))}
@@ -167,10 +171,9 @@ export default function TradesPage() {
       const outcome: TradeOutcome = pnl > 0 ? 'Win' : pnl < 0 ? 'Loss' : 'Breakeven';
 
       const ann = getAnn(t.id);
-      const mergedTags = [
-        ...(t.tags ?? []),
-        ...(ann?.tags ?? []),
-      ].filter(Boolean);
+      const mergedTags = Array.from(
+        new Set([...(t.tags ?? []), ...(ann?.tags ?? [])].filter(Boolean)),
+      );
       const mergedNotes = ann?.notes?.trim?.() ? ann.notes : (t.notes ?? '');
 
       return {
