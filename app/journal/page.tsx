@@ -120,11 +120,11 @@ export default function JournalPage() {
                 New Entry
               </Button>
             </DialogTrigger>
-            <DialogContent className="glass-panel border-white/10">
+            <DialogContent className="glass-panel border-white/10 max-h-[85vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle className="text-white">New Journal Entry</DialogTitle>
               </DialogHeader>
-              <div className="space-y-4">
+              <div className="space-y-4 pb-20">
                 <div>
                   <Label className="text-xs uppercase text-white/70">Title</Label>
                   <Input
@@ -234,6 +234,9 @@ export default function JournalPage() {
                   />
                 </div>
 
+              </div>
+
+              <div className="sticky bottom-0 left-0 right-0 pt-3 pb-4 bg-black/70 backdrop-blur border-t border-white/10">
                 <Button onClick={handleAddEntry} className="w-full bg-cyan-500 hover:bg-cyan-600 text-black">
                   Create Entry
                 </Button>
