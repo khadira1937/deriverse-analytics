@@ -39,13 +39,16 @@ export function Header() {
   const [isAddressValid, setIsAddressValid] = useState(true);
 
   const validateSolanaAddress = (addr: string) => {
-    const isValid = /^[1-9A-HJ-NP-Z]{43,44}$/.test(addr);
-    setIsAddressValid(isValid || addr === '');
-    return isValid || addr === '';
+    const trimmed = addr.trim();
+    // Solana base58 addresses are typically 32..44 chars.
+    const isValid = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(trimmed);
+    setIsAddressValid(isValid || trimmed === '');
+    return isValid || trimmed === '';
   };
 
   const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
+    // keep raw for UX but validate trimmed
     setSolanaAddress(value);
     validateSolanaAddress(value);
   };

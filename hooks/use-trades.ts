@@ -63,13 +63,17 @@ export function useTrades() {
         }
 
         // on-chain
-        if (!solanaAddress) throw new Error('Please enter a Solana address.');
+        const trimmed = (solanaAddress ?? '').trim();
+        if (!trimmed) throw new Error('Please enter a Solana address.');
+        if (!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(trimmed)) {
+          throw new Error('Invalid Solana address (base58).');
+        }
         const env = {
           rpcUrl: process.env.SOLANA_RPC_URL ?? 'https://api.devnet.solana.com',
           programId: process.env.DERIVERSE_PROGRAM_ID ?? '',
           version: Number(process.env.DERIVERSE_VERSION ?? '6'),
         };
-        const res = await fetchDeriverseTrades(env, solanaAddress);
+        const res = await fetchDeriverseTrades(env, trimmed);
         if (!res.ok) throw new Error(res.error);
         if (!cancelled) setBaseTrades(res.trades);
       } catch (e: any) {

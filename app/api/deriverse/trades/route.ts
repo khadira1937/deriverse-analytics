@@ -65,7 +65,15 @@ function toIsoFromBlockTime(bt: number | bigint | null | undefined): Date {
 export async function GET(req: Request) {
   try {
     const url = new URL(req.url);
-    const trader = url.searchParams.get('trader') ?? '';
+    const traderRaw = url.searchParams.get('trader') ?? '';
+    const traderMatch = traderRaw.match(/[1-9A-HJ-NP-Za-km-z]{32,44}/);
+    const trader = traderMatch?.[0] ?? '';
+    if (!trader && traderRaw) {
+      return NextResponse.json(
+        { ok: false, error: `Invalid trader address. Expected base58 32..44 chars.` },
+        { status: 400 },
+      );
+    }
     const limit = Math.min(Number(url.searchParams.get('limit') ?? '200') || 200, 500);
 
     if (!trader) {
