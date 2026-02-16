@@ -55,9 +55,11 @@ async function getEngine(rpcUrl: string, programId: string, version: number) {
   return { envKey, engine };
 }
 
-function toIsoFromBlockTime(bt: bigint | null | undefined): Date {
-  if (!bt) return new Date();
-  return new Date(Number(bt) * 1000);
+function toIsoFromBlockTime(bt: number | bigint | null | undefined): Date {
+  if (bt == null) return new Date();
+  const n = typeof bt === 'bigint' ? Number(bt) : bt;
+  if (!Number.isFinite(n)) return new Date();
+  return new Date(n * 1000);
 }
 
 export async function GET(req: Request) {
@@ -79,29 +81,14 @@ export async function GET(req: Request) {
       return NextResponse.json(cached.body);
     }
 
-    // set signer (read-only) to derive client accounts
-    await engine.setSigner(address(trader));
-
-    // check client exists
-    const okClient = await (engine as any).checkClient();
-    if (!okClient) {
-      const body = {
-        ok: false,
-        error: 'Client account not found for this address on Deriverse (devnet).',
-      };
-      memCache.set(key, { at: Date.now(), body });
-      return NextResponse.json(body, { status: 404 });
-    }
-
-    const clientPrimaryAccount = (engine as any).clientPrimaryAccount as string | undefined;
-    if (!clientPrimaryAccount) {
-      return NextResponse.json({ ok: false, error: 'Failed to derive client account.' }, { status: 500 });
-    }
+    // We intentionally DO NOT require a Deriverse client account to exist.
+    // Some users may have transactions that include Deriverse program logs without a persistent client PDA.
+    // We decode Deriverse logs from recent transactions involving the trader address directly.
 
     const rpc = createSolanaRpc(rpcUrl);
 
-    // Fetch recent tx signatures involving the client primary account
-    const sigInfos = await rpc.getSignaturesForAddress(address(clientPrimaryAccount), { limit }).send();
+    // Fetch recent tx signatures involving the trader address
+    const sigInfos = await rpc.getSignaturesForAddress(address(trader), { limit }).send();
 
     // Decode logs into fill events
     const orderToInstr = new Map<number, number>();

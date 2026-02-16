@@ -2,12 +2,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import {
-  DEMO_KPIS,
-  DEMO_EQUITY_CURVE,
-  DEMO_DAILY_PNL,
-  DEMO_SYMBOL_PERFORMANCE,
-} from '@/lib/mock/kpis';
+import { useTrades } from '@/hooks/use-trades';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Download, Copy, FileJson } from 'lucide-react';
@@ -23,6 +18,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
 export default function ReportsPage() {
+  const { metrics, trades } = useTrades();
+  const kpis = metrics.kpis;
+  const symbolPerformance = metrics.symbols;
+  const dailyPnL = metrics.daily;
+
   const handleExportPDF = () => {
     toast.info('PDF export feature coming soon');
   };
@@ -37,9 +37,9 @@ export default function ReportsPage() {
     const reportData = {
       generated: new Date().toISOString(),
       period: 'Last 30 days',
-      kpis: DEMO_KPIS,
-      symbolPerformance: DEMO_SYMBOL_PERFORMANCE,
-      dailyPnL: DEMO_DAILY_PNL,
+      kpis,
+      symbolPerformance,
+      dailyPnL,
     };
 
     const blob = new Blob([JSON.stringify(reportData, null, 2)], {
@@ -157,12 +157,12 @@ export default function ReportsPage() {
 
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {[
-                { label: 'Total PnL', value: `$${DEMO_KPIS.totalPnL.toLocaleString()}` },
-                { label: 'Win Rate', value: `${DEMO_KPIS.winRate.toFixed(1)}%` },
-                { label: 'Trade Count', value: DEMO_KPIS.tradeCount },
-                { label: 'Total Volume', value: `${(DEMO_KPIS.totalVolume / 1000).toFixed(1)}K` },
-                { label: 'Total Fees', value: `$${DEMO_KPIS.totalFees.toFixed(2)}` },
-                { label: 'Avg Duration', value: `${DEMO_KPIS.avgTradeDuration.toFixed(1)}h` },
+                { label: 'Total PnL', value: `$${kpis.totalPnL.toLocaleString()}` },
+                { label: 'Win Rate', value: `${kpis.winRate.toFixed(1)}%` },
+                { label: 'Trade Count', value: kpis.tradeCount },
+                { label: 'Total Volume', value: `${(kpis.totalVolume / 1000).toFixed(1)}K` },
+                { label: 'Total Fees', value: `$${kpis.totalFees.toFixed(2)}` },
+                { label: 'Avg Duration', value: `${kpis.avgTradeDurationHours.toFixed(1)}h` },
               ].map((item, i) => (
                 <div key={i} className="glass-panel-sm p-3 rounded-md border border-white/10">
                   <p className="text-xs text-white/60 uppercase font-semibold">{item.label}</p>
@@ -177,15 +177,15 @@ export default function ReportsPage() {
             <h3 className="text-lg font-semibold text-white mb-4">Top 5 Winning Trades</h3>
 
             <div className="space-y-2">
-              {DEMO_SYMBOL_PERFORMANCE.slice(0, 5).map((symbol, i) => (
+              {symbolPerformance.slice(0, 5).map((symbol, i) => (
                 <div
                   key={i}
                   className="flex items-center justify-between p-3 bg-white/5 rounded-lg"
                 >
                   <span className="font-medium text-cyan-400">{symbol.symbol}</span>
                   <div className="text-right">
-                    <p className="text-sm font-semibold text-green-400">
-                      +${symbol.pnl.toFixed(2)}
+                    <p className={`text-sm font-semibold ${symbol.pnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                      {symbol.pnl >= 0 ? '+' : ''}${symbol.pnl.toFixed(2)}
                     </p>
                     <p className="text-xs text-white/60">{symbol.trades} trades</p>
                   </div>
@@ -200,12 +200,12 @@ export default function ReportsPage() {
 
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {[
-                { label: 'Largest Gain', value: `$${DEMO_KPIS.largestGain.toFixed(2)}` },
-                { label: 'Largest Loss', value: `$${Math.abs(DEMO_KPIS.largestLoss).toFixed(2)}` },
-                { label: 'Avg Win', value: `$${DEMO_KPIS.avgWin.toFixed(2)}` },
-                { label: 'Avg Loss', value: `$${Math.abs(DEMO_KPIS.avgLoss).toFixed(2)}` },
-                { label: 'Risk/Reward', value: (Math.abs(DEMO_KPIS.avgWin / DEMO_KPIS.avgLoss) || 0).toFixed(2) },
-                { label: 'Long/Short Ratio', value: DEMO_KPIS.longShortRatio.toFixed(2) },
+                { label: 'Largest Gain', value: `$${kpis.largestGain.toFixed(2)}` },
+                { label: 'Largest Loss', value: `$${kpis.largestLoss.toFixed(2)}` },
+                { label: 'Avg Win', value: `$${kpis.avgWin.toFixed(2)}` },
+                { label: 'Avg Loss', value: `$${kpis.avgLoss.toFixed(2)}` },
+                { label: 'Risk/Reward', value: kpis.riskReward.toFixed(2) },
+                { label: 'Long/Short Ratio', value: kpis.longShortRatio.toFixed(2) },
               ].map((item, i) => (
                 <div key={i} className="glass-panel-sm p-3 rounded-md border border-white/10">
                   <p className="text-xs text-white/60 uppercase font-semibold">{item.label}</p>
