@@ -20,9 +20,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Calendar, ChevronDown, Settings, Database, Orbit } from 'lucide-react';
+import { Settings, Database, Orbit } from 'lucide-react';
 import { toast } from 'sonner';
 import { Logo } from './logo';
+import { DateRangePicker } from './date-range-picker';
 
 export function Header() {
   const pathname = usePathname();
@@ -153,11 +154,8 @@ export function Header() {
             </SelectContent>
           </Select>
 
-          {/* Date Range (placeholder) */}
-          <Button size="sm" variant="outline" className="h-8 text-xs gap-2">
-            <Calendar className="w-3 h-3" />
-            Date Range
-          </Button>
+          {/* Date Range */}
+          <DateRangePicker />
         </div>
       </div>
     </header>
