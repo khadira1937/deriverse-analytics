@@ -21,7 +21,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Card } from '@/components/ui/card';
-import { Download, Filter, Tags, NotebookPen } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Download, Filter } from 'lucide-react';
 import { toast } from 'sonner';
 
 const columns: ColumnDef<Trade>[] = [
@@ -96,6 +97,35 @@ const columns: ColumnDef<Trade>[] = [
     accessorKey: 'orderType',
     header: 'Order Type',
     cell: ({ row }) => <span className="text-white/60">{row.getValue('orderType')}</span>,
+  },
+  {
+    accessorKey: 'tags',
+    header: 'Tags',
+    cell: ({ row }) => {
+      const tags = (row.getValue('tags') as string[]) ?? [];
+      if (!tags.length) return <span className="text-white/30">—</span>;
+      return (
+        <div className="flex flex-wrap gap-1">
+          {tags.slice(0, 3).map((t) => (
+            <Badge key={t} variant="outline" className="h-5 px-1.5 text-[10px] border-cyan-400/30 text-cyan-200">
+              {t}
+            </Badge>
+          ))}
+          {tags.length > 3 && (
+            <span className="text-[10px] text-white/50">+{tags.length - 3}</span>
+          )}
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: 'notes',
+    header: 'Notes',
+    cell: ({ row }) => {
+      const notes = (row.getValue('notes') as string) ?? '';
+      if (!notes.trim()) return <span className="text-white/30">—</span>;
+      return <span className="text-white/60 line-clamp-1 max-w-[240px]">{notes}</span>;
+    },
   },
 ];
 
