@@ -83,7 +83,7 @@ export default function DashboardPage() {
           <p className="text-sm text-white/60 mt-1">
             {dataMode === 'demo' && 'Using Demo Dataset'}
             {dataMode === 'csv' && 'Using CSV Import'}
-            {dataMode === 'on-chain' && 'Using Deriverse On-chain (Devnet)'}
+            {dataMode === 'on-chain' && 'Using Deriverse On-chain (Devnet) — decoded from logs'}
           </p>
         </motion.div>
 

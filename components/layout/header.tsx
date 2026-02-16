@@ -150,7 +150,7 @@ export function Header() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All symbols</SelectItem>
-              {['SOL/USDC', 'BTC/USDC', 'ETH/USDC', 'JUP/USDC', 'RAY/USDC', 'ORCA/USDC'].map(
+              {['SOL/USDC', 'BTC/USDC', 'ETH/USDC', 'JUP/USDC', 'RAY/USDC', 'ORCA/USDC', 'INSTR-0', 'INSTR-1', 'INSTR-2', 'INSTR-3'].map(
                 (symbol) => (
                   <SelectItem key={symbol} value={symbol}>
                     {symbol}
