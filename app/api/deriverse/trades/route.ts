@@ -155,46 +155,54 @@ export async function GET(req: Request) {
           }
         }
 
-        for (const msg of decoded as any[]) {
-          if (typeof msg?.tag !== 'number') continue;
+        const fillMsgs = (decoded as any[]).filter((m) => m?.tag === 11 || m?.tag === 19);
+        const fillCount = fillMsgs.length;
+        const feesPerFill = fillCount > 0 ? feesTotal / fillCount : 0;
 
-          // SpotFillOrderReportModel(11) / PerpFillOrderReportModel(19)
-          if (msg.tag === 11 || msg.tag === 19) {
-            const orderId = Number(msg.orderId);
-            const instrId = orderToInstr.get(orderId);
-            const orderType = orderToOrderType.get(orderId) ?? 'unknown';
+        for (const msg of fillMsgs) {
+          const orderId = Number(msg.orderId);
 
-            const sideNum = Number(msg.side);
-            const side = sideNum === 0 ? 'long' : 'short';
+          // instrId mapping can be missing if place-order logs aren't present in the same tx.
+          // Try multiple fallbacks before returning UNKNOWN.
+          const instrFromOrderMap = orderToInstr.get(orderId);
+          const instrFromFill = msg.instrId != null ? Number(msg.instrId) : null;
+          const instrId =
+            instrFromOrderMap != null
+              ? instrFromOrderMap
+              : Number.isFinite(instrFromFill as any)
+                ? (instrFromFill as number)
+                : null;
 
-            // qty/perps
-            const size = msg.tag === 11 ? Number(msg.qty) : Number(msg.perps);
-            const price = Number(msg.price);
+          const orderType = orderToOrderType.get(orderId) ?? 'unknown';
 
-            // Symbol is best-effort (SDK does not provide tickers)
-            const symbol = instrId != null ? `INSTR-${instrId}` : 'UNKNOWN';
+          const sideNum = Number(msg.side);
+          const side = sideNum === 0 ? 'long' : 'short';
 
-            // PnL is not directly available from logs alone without position reconstruction.
-            // We return 0 for now; Phase C metrics still work for volume/fees/trade counts.
-            trades.push({
-              id: `onchain-${tx.slot}-${orderId}-${msg.tag}`,
-              ts: ts.toISOString(),
-              symbol,
-              side,
-              orderType,
-              entryPrice: null,
-              exitPrice: null,
-              size: Number.isFinite(size) ? size : null,
-              pnlUsd: 0,
-              feesUsd: feesTotal,
-              durationSec: null,
-              tags: [],
-              notes: `Decoded from Deriverse transaction logs (${msg.tag === 11 ? 'spot' : 'perp'} fill)`,
-            });
+          // qty/perps
+          const size = msg.tag === 11 ? Number(msg.qty) : Number(msg.perps);
+          const price = Number(msg.price);
 
-            // approximate volume by price*size when available
-            void price;
-          }
+          // Symbol is best-effort (SDK does not provide tickers)
+          const symbol = instrId != null ? `INSTR-${instrId}` : `ORDER-${orderId}`;
+
+          // PnL is not directly available from logs alone without position reconstruction.
+          trades.push({
+            id: `onchain-${tx.slot}-${orderId}-${msg.tag}`,
+            ts: ts.toISOString(),
+            symbol,
+            side,
+            orderType,
+            entryPrice: null,
+            exitPrice: null,
+            size: Number.isFinite(size) ? size : null,
+            pnlUsd: 0,
+            feesUsd: feesPerFill,
+            durationSec: null,
+            tags: [],
+            notes: `Decoded from Deriverse transaction logs (${msg.tag === 11 ? 'spot' : 'perp'} fill)`,
+          });
+
+          void price;
         }
       }
     }
