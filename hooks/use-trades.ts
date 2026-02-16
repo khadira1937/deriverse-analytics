@@ -7,7 +7,7 @@ import { demoTradesToNormalized } from '@/lib/adapters/demo';
 import { parseTradesCsv } from '@/lib/adapters/csv';
 import { fetchDeriverseTrades } from '@/lib/adapters/deriverse';
 import type { NormalizedTrade } from '@/lib/domain/trade';
-import { computeBasicMetrics } from '@/lib/metrics/basic';
+import { computeMetrics } from '@/lib/metrics/engine';
 
 export type TradeFilters = {
   symbol?: string | null;
@@ -93,7 +93,7 @@ export function useTrades() {
     return applyDateRange(afterSymbol, dateRange.from, dateRange.to);
   }, [baseTrades, selectedSymbol, dateRange.from, dateRange.to]);
 
-  const metrics = useMemo(() => computeBasicMetrics(filteredTrades), [filteredTrades]);
+  const metrics = useMemo(() => computeMetrics(filteredTrades), [filteredTrades]);
 
   return {
     trades: filteredTrades,

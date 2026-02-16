@@ -21,8 +21,8 @@ export const EquityPointSchema = z.object({
   ts: z.date(),
   cumPnL: z.number(),
   equity: z.number(),
-  drawdown: z.number(),
-  maxDrawdown: z.number(),
+  drawdown: z.number(), // percentage
+  maxDrawdown: z.number(), // percentage
 });
 export type EquityPoint = z.infer<typeof EquityPointSchema>;
 
@@ -42,10 +42,62 @@ export const SymbolPerfSchema = z.object({
 });
 export type SymbolPerf = z.infer<typeof SymbolPerfSchema>;
 
+export const FeeCompositionSchema = z.object({
+  maker: z.number(),
+  taker: z.number(),
+  other: z.number(),
+  total: z.number(),
+});
+export type FeeComposition = z.infer<typeof FeeCompositionSchema>;
+
+export const CumulativeFeesPointSchema = z.object({
+  day: z.string(),
+  cumFees: z.number(),
+});
+export type CumulativeFeesPoint = z.infer<typeof CumulativeFeesPointSchema>;
+
+export const OrderTypePerfSchema = z.object({
+  orderType: z.string(),
+  trades: z.number(),
+  pnl: z.number(),
+  winRate: z.number(),
+});
+export type OrderTypePerf = z.infer<typeof OrderTypePerfSchema>;
+
+export const TimeOfDayBucketSchema = z.object({
+  hour: z.number().int().min(0).max(23),
+  pnl: z.number(),
+  trades: z.number(),
+});
+export type TimeOfDayBucket = z.infer<typeof TimeOfDayBucketSchema>;
+
+export const SessionPerfSchema = z.object({
+  morning: z.object({ pnl: z.number(), trades: z.number() }),
+  afternoon: z.object({ pnl: z.number(), trades: z.number() }),
+  night: z.object({ pnl: z.number(), trades: z.number() }),
+  overnight: z.object({ pnl: z.number(), trades: z.number() }),
+});
+export type SessionPerf = z.infer<typeof SessionPerfSchema>;
+
+export const DirectionBiasSchema = z.object({
+  long: z.object({ pnl: z.number(), trades: z.number() }),
+  short: z.object({ pnl: z.number(), trades: z.number() }),
+});
+export type DirectionBias = z.infer<typeof DirectionBiasSchema>;
+
 export const MetricsResultSchema = z.object({
   kpis: KpiSchema,
   equityCurve: z.array(EquityPointSchema),
   daily: z.array(DailyPointSchema),
   symbols: z.array(SymbolPerfSchema),
+
+  // Phase C additions
+  feeComposition: FeeCompositionSchema.optional(),
+  cumulativeFeesByDay: z.array(CumulativeFeesPointSchema).optional(),
+  orderTypePerformance: z.array(OrderTypePerfSchema).optional(),
+  timeOfDay: z.array(TimeOfDayBucketSchema).optional(),
+  sessionPerformance: SessionPerfSchema.optional(),
+  directionBias: DirectionBiasSchema.optional(),
+  maxDrawdownPct: z.number().optional(),
 });
 export type MetricsResult = z.infer<typeof MetricsResultSchema>;
