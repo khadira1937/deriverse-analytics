@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { useAppContext } from '@/lib/context/app-context';
-import { DEMO_KPIS, DEMO_EQUITY_CURVE, DEMO_DAILY_PNL, DEMO_SYMBOL_PERFORMANCE } from '@/lib/mock/kpis';
+import { useTrades } from '@/hooks/use-trades';
+import type { EquityCurvePoint, DailyPnLPoint, SymbolPerformance } from '@/lib/types';
 import { KPICard } from '@/components/dashboard/kpi-card';
 import { EquityCurveChart } from '@/components/dashboard/equity-curve-chart';
 import { DailyPnLChart } from '@/components/dashboard/daily-pnl-chart';
@@ -27,7 +28,34 @@ const item = {
 
 export default function DashboardPage() {
   const { dataMode } = useAppContext();
-  const [loading] = useState(false);
+  const { metrics, loading, error } = useTrades();
+
+  const kpis = metrics.kpis;
+
+  const equity: EquityCurvePoint[] = metrics.equityCurve.map((p) => ({
+    timestamp: p.ts,
+    equity: p.equity,
+    cumPnL: p.cumPnL,
+    drawdown: p.drawdown,
+    maxDrawdown: p.maxDrawdown,
+  }));
+
+  const daily: DailyPnLPoint[] = metrics.daily.map((p) => ({
+    date: new Date(p.day),
+    pnl: p.pnl,
+    trades: p.trades,
+  }));
+
+  const symbols: SymbolPerformance[] = metrics.symbols
+    .map((s) => ({
+      symbol: s.symbol,
+      trades: s.trades,
+      pnl: s.pnl,
+      pnlPercent: 0,
+      winRate: s.winRate,
+      volume: s.volume,
+    }))
+    .sort((a, b) => b.pnl - a.pnl);
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -54,10 +82,18 @@ export default function DashboardPage() {
           </h1>
           <p className="text-sm text-white/60 mt-1">
             {dataMode === 'demo' && 'Using Demo Dataset'}
-            {dataMode === 'csv' && 'Using CSV Import (Simulation)'}
-            {dataMode === 'on-chain' && 'Using On-chain Data (Disconnected)'}
+            {dataMode === 'csv' && 'Using CSV Import'}
+            {dataMode === 'on-chain' && 'Using Deriverse On-chain (Devnet)'}
           </p>
         </motion.div>
+
+        {error && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+            <Card className="glass-panel border-red-500/20 bg-red-500/5 p-4 text-sm text-red-200">
+              {error}
+            </Card>
+          </motion.div>
+        )}
 
         {/* KPI Grid */}
         <motion.div
@@ -69,10 +105,10 @@ export default function DashboardPage() {
           <motion.div variants={item}>
             <KPICard
               label="Total PnL"
-              value={`$${DEMO_KPIS.totalPnL.toLocaleString()}`}
-              change={DEMO_KPIS.pnlPercent}
-              trend={DEMO_KPIS.totalPnL > 0 ? 'up' : 'down'}
-              variant={DEMO_KPIS.totalPnL > 0 ? 'success' : 'warning'}
+              value={`$${kpis.totalPnL.toLocaleString()}`}
+              change={kpis.pnlPercent ?? 0}
+              trend={kpis.totalPnL > 0 ? 'up' : 'down'}
+              variant={kpis.totalPnL > 0 ? 'success' : 'warning'}
               description="Cumulative profit/loss across all trades"
             />
           </motion.div>
@@ -80,7 +116,7 @@ export default function DashboardPage() {
           <motion.div variants={item}>
             <KPICard
               label="Win Rate"
-              value={`${DEMO_KPIS.winRate.toFixed(1)}%`}
+              value={`${kpis.winRate.toFixed(1)}%`}
               description="Percentage of winning trades"
             />
           </motion.div>
@@ -88,7 +124,7 @@ export default function DashboardPage() {
           <motion.div variants={item}>
             <KPICard
               label="Trade Count"
-              value={DEMO_KPIS.tradeCount}
+              value={kpis.tradeCount}
               description="Total number of trades"
             />
           </motion.div>
@@ -96,7 +132,7 @@ export default function DashboardPage() {
           <motion.div variants={item}>
             <KPICard
               label="Total Volume"
-              value={`${(DEMO_KPIS.totalVolume / 1000).toFixed(1)}K`}
+              value={`${(kpis.totalVolume / 1000).toFixed(1)}K`}
               unit="units"
               description="Total traded volume"
             />
@@ -105,7 +141,7 @@ export default function DashboardPage() {
           <motion.div variants={item}>
             <KPICard
               label="Total Fees"
-              value={`$${DEMO_KPIS.totalFees.toFixed(2)}`}
+              value={`$${kpis.totalFees.toFixed(2)}`}
               description="Total trading fees paid"
             />
           </motion.div>
@@ -113,7 +149,7 @@ export default function DashboardPage() {
           <motion.div variants={item}>
             <KPICard
               label="Avg Trade Duration"
-              value={`${DEMO_KPIS.avgTradeDuration.toFixed(1)}h`}
+              value={`${kpis.avgTradeDurationHours.toFixed(1)}h`}
               description="Average holding time per trade"
             />
           </motion.div>
@@ -121,7 +157,7 @@ export default function DashboardPage() {
           <motion.div variants={item}>
             <KPICard
               label="Long/Short Ratio"
-              value={DEMO_KPIS.longShortRatio.toFixed(2)}
+              value={kpis.longShortRatio.toFixed(2)}
               description="Ratio of long to short trades"
             />
           </motion.div>
@@ -129,7 +165,7 @@ export default function DashboardPage() {
           <motion.div variants={item}>
             <KPICard
               label="Largest Gain"
-              value={`$${DEMO_KPIS.largestGain.toFixed(2)}`}
+              value={`$${kpis.largestGain.toFixed(2)}`}
               trend="up"
               variant="success"
               description="Biggest single trade win"
@@ -139,7 +175,7 @@ export default function DashboardPage() {
           <motion.div variants={item}>
             <KPICard
               label="Largest Loss"
-              value={`$${Math.abs(DEMO_KPIS.largestLoss).toFixed(2)}`}
+              value={`$${kpis.largestLoss.toFixed(2)}`}
               trend="down"
               variant="warning"
               description="Biggest single trade loss"
@@ -149,7 +185,7 @@ export default function DashboardPage() {
           <motion.div variants={item}>
             <KPICard
               label="Avg Win"
-              value={`$${DEMO_KPIS.avgWin.toFixed(2)}`}
+              value={`$${kpis.avgWin.toFixed(2)}`}
               variant="success"
               description="Average winning trade size"
             />
@@ -158,7 +194,7 @@ export default function DashboardPage() {
           <motion.div variants={item}>
             <KPICard
               label="Avg Loss"
-              value={`$${Math.abs(DEMO_KPIS.avgLoss).toFixed(2)}`}
+              value={`$${kpis.avgLoss.toFixed(2)}`}
               variant="warning"
               description="Average losing trade size"
             />
@@ -167,7 +203,7 @@ export default function DashboardPage() {
           <motion.div variants={item}>
             <KPICard
               label="Risk/Reward"
-              value={(Math.abs(DEMO_KPIS.avgWin / DEMO_KPIS.avgLoss) || 0).toFixed(2)}
+              value={kpis.riskReward.toFixed(2)}
               description="Ratio of avg win to avg loss"
             />
           </motion.div>
@@ -183,7 +219,7 @@ export default function DashboardPage() {
           >
             <Card className="glass-panel border-white/10 p-6">
               <h2 className="text-lg font-semibold text-white mb-4">Equity Curve</h2>
-              <EquityCurveChart data={DEMO_EQUITY_CURVE} />
+              <EquityCurveChart data={equity} />
             </Card>
           </motion.div>
 
@@ -195,7 +231,7 @@ export default function DashboardPage() {
           >
             <Card className="glass-panel border-white/10 p-6">
               <h2 className="text-lg font-semibold text-white mb-4">Daily P&L</h2>
-              <DailyPnLChart data={DEMO_DAILY_PNL} />
+              <DailyPnLChart data={daily} />
             </Card>
           </motion.div>
         </div>
@@ -208,7 +244,7 @@ export default function DashboardPage() {
         >
           <Card className="glass-panel border-white/10 p-6">
             <h2 className="text-lg font-semibold text-white mb-4">Symbol Performance</h2>
-            <SymbolPerformanceCard data={DEMO_SYMBOL_PERFORMANCE} />
+            <SymbolPerformanceCard data={symbols} />
           </Card>
         </motion.div>
       </div>
