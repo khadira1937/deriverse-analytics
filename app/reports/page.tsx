@@ -2,7 +2,9 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
+import { format } from 'date-fns';
 import { useTrades } from '@/hooks/use-trades';
+import { useAppContext } from '@/lib/context/app-context';
 import { computeInsights } from '@/lib/insights/insights';
 import { EquityCurveChart } from '@/components/dashboard/equity-curve-chart';
 import { DailyPnLChart } from '@/components/dashboard/daily-pnl-chart';
@@ -21,6 +23,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
 export default function ReportsPage() {
+  const { selectedSymbol, dateRange, dataMode, setDateRange } = useAppContext();
   const { metrics, trades } = useTrades();
   const kpis = metrics.kpis;
   const symbolPerformance = metrics.symbols;
@@ -39,9 +42,26 @@ export default function ReportsPage() {
   };
 
   const handleDownloadJSON = () => {
+    const formulas = {
+      totalPnL: 'Σ(trade.pnlUsd)',
+      winRate: '(winningTrades / totalTrades) * 100',
+      totalFees: 'Σ(trade.feesUsd)',
+      avgTradeDurationHours: 'avg(trade.durationSec / 3600)',
+      longShortRatio: 'longTrades / shortTrades',
+      riskReward: 'avgWin / avgLoss (absolute)',
+      drawdownPct: '(peakEquity - equity) / peakEquity * 100',
+      cumulativeFeesByDay: 'cumulative sum of daily fees',
+    };
+
     const reportData = {
       generated: new Date().toISOString(),
-      period: 'Last 30 days',
+      filters: {
+        dataMode,
+        symbol: selectedSymbol,
+        dateFrom: dateRange.from ? dateRange.from.toISOString() : null,
+        dateTo: dateRange.to ? dateRange.to.toISOString() : null,
+      },
+      formulas,
       kpis,
       equityCurve: metrics.equityCurve,
       dailyPnL,
@@ -90,32 +110,71 @@ export default function ReportsPage() {
         >
           <h2 className="text-xl font-semibold text-white">Generate Report</h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <Label className="text-xs uppercase text-white/70 block mb-2">Period</Label>
-              <div className="glass-panel-sm p-3 rounded-md border border-white/10 text-sm text-white/80">
-                Last 30 days
+          <div className="rounded-lg border border-white/10 bg-white/5 p-4">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+              <div>
+                <div className="text-xs uppercase text-white/60 font-semibold">Active filters</div>
+                <div className="text-sm text-white/80 mt-1">
+                  <span className="text-white/60">Mode:</span> {dataMode}{' '}•{' '}
+                  <span className="text-white/60">Symbol:</span> {selectedSymbol ?? 'All'}
+                </div>
+                <div className="text-sm text-white/80">
+                  <span className="text-white/60">Date:</span>{' '}
+                  {dateRange.from ? format(dateRange.from, 'LLL dd, y') : '—'}
+                  {' '}→{' '}
+                  {dateRange.to ? format(dateRange.to, 'LLL dd, y') : '—'}
+                  <span className="text-xs text-white/50"> (inclusive)</span>
+                </div>
+                <div className="text-xs text-white/50 mt-2">
+                  Tip: you can change these from the global header (symbol + date range). Reports update instantly.
+                </div>
               </div>
-            </div>
-            <div>
-              <Label className="text-xs uppercase text-white/70 block mb-2">
-                From Date
-              </Label>
-              <Input type="date" className="h-10" />
-            </div>
-            <div>
-              <Label className="text-xs uppercase text-white/70 block mb-2">To Date</Label>
-              <Input type="date" className="h-10" />
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:w-[360px]">
+                <div>
+                  <Label className="text-xs uppercase text-white/70 block mb-2">From</Label>
+                  <Input
+                    type="date"
+                    className="h-10"
+                    value={dateRange.from ? format(dateRange.from, 'yyyy-MM-dd') : ''}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setDateRange({
+                        from: v ? new Date(`${v}T00:00:00`) : undefined,
+                        to: dateRange.to,
+                      });
+                    }}
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs uppercase text-white/70 block mb-2">To</Label>
+                  <Input
+                    type="date"
+                    className="h-10"
+                    value={dateRange.to ? format(dateRange.to, 'yyyy-MM-dd') : ''}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setDateRange({
+                        from: dateRange.from,
+                        to: v ? new Date(`${v}T00:00:00`) : undefined,
+                      });
+                    }}
+                  />
+                </div>
+              </div>
             </div>
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3">
+            <div className="sr-only" aria-live="polite">
+              Reports are generated from the currently selected filters.
+            </div>
             <Button
               onClick={handleExportPDF}
               className="gap-2 bg-cyan-500 hover:bg-cyan-600 text-black flex-1 sm:flex-none"
             >
               <Download className="w-4 h-4" />
-              Export PDF (UI Only)
+              Export PDF (Print / Save as PDF)
             </Button>
 
             <Button
