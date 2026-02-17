@@ -9,7 +9,7 @@ import { useTradeAnnotations } from '@/hooks/use-trade-annotations';
 import { Trade, OrderSide, TradeOutcome } from '@/lib/types';
 import { DataTable } from '@/components/ui/data-table';
 import { Button } from '@/components/ui/button';
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -22,7 +22,8 @@ import {
 } from '@/components/ui/select';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Download, Filter } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Download, Filter, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 const columns: ColumnDef<Trade>[] = [
@@ -143,10 +144,12 @@ export default function TradesPage() {
   const [annNotes, setAnnNotes] = useState('');
   const [annSetupType, setAnnSetupType] = useState('');
   const [annMistakeType, setAnnMistakeType] = useState('');
+  const [annReviewed, setAnnReviewed] = useState(false);
 
   const [filterSide, setFilterSide] = useState<OrderSide | 'all'>('all');
   const [filterOutcome, setFilterOutcome] = useState<TradeOutcome | 'all'>('all');
   const [filterOrderType, setFilterOrderType] = useState<string>('all');
+  const [filterAnnotated, setFilterAnnotated] = useState<'all' | 'annotated' | 'reviewed'>('all');
 
   // Convert normalized trades into the UI Trade model used by the table
   const trades: Trade[] = useMemo(() => {
@@ -202,9 +205,17 @@ export default function TradesPage() {
       if (filterSide !== 'all' && trade.side !== filterSide) return false;
       if (filterOutcome !== 'all' && trade.outcome !== filterOutcome) return false;
       if (filterOrderType !== 'all' && trade.orderType !== filterOrderType) return false;
+
+      if (filterAnnotated !== 'all') {
+        const ann = getAnn(trade.id);
+        const hasAnn = !!(ann && (ann.notes?.trim() || (ann.tags?.length ?? 0) > 0 || ann.reviewed));
+        if (filterAnnotated === 'annotated' && !hasAnn) return false;
+        if (filterAnnotated === 'reviewed' && !(ann?.reviewed ?? false)) return false;
+      }
+
       return true;
     });
-  }, [trades, selectedSymbol, filterSide, filterOutcome, filterOrderType]);
+  }, [trades, selectedSymbol, filterSide, filterOutcome, filterOrderType, filterAnnotated, getAnn]);
 
   const handleExport = () => {
     const csv = [
@@ -322,6 +333,17 @@ export default function TradesPage() {
             </SelectContent>
           </Select>
 
+          <Select value={filterAnnotated} onValueChange={(v) => setFilterAnnotated(v as any)}>
+            <SelectTrigger className="w-36 h-8 text-xs">
+              <SelectValue placeholder="Annotations" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Trades</SelectItem>
+              <SelectItem value="annotated">Annotated</SelectItem>
+              <SelectItem value="reviewed">Reviewed</SelectItem>
+            </SelectContent>
+          </Select>
+
           <div className="ml-auto flex gap-2">
             <Button
               size="sm"
@@ -364,6 +386,7 @@ export default function TradesPage() {
               setAnnNotes(ann?.notes ?? row.notes ?? '');
               setAnnSetupType(ann?.setupType ?? '');
               setAnnMistakeType(ann?.mistakeType ?? '');
+              setAnnReviewed(ann?.reviewed ?? false);
             }}
           />
 
@@ -389,13 +412,38 @@ export default function TradesPage() {
                 </div>
 
                 <div>
-                  <Label className="text-xs uppercase text-white/70">Tags (comma separated)</Label>
-                  <Input value={annTags} onChange={(e) => setAnnTags(e.target.value)} className="mt-1 h-9" placeholder="scalp, A+, revenge" />
+                  <Label className="text-xs uppercase text-white/70">Tags</Label>
+                  <div className="mt-2 flex flex-wrap gap-1">
+                    {annTags
+                      .split(/[,;]/g)
+                      .map((t) => t.trim())
+                      .filter(Boolean)
+                      .slice(0, 12)
+                      .map((t, i) => (
+                        <Badge
+                          key={`${t}-${i}`}
+                          variant="outline"
+                          className="h-6 px-2 text-[11px] border-cyan-400/30 text-cyan-200"
+                        >
+                          {t}
+                        </Badge>
+                      ))}
+                    {!annTags.trim() && <span className="text-xs text-white/40">No tags yet</span>}
+                  </div>
+                  <Input value={annTags} onChange={(e) => setAnnTags(e.target.value)} className="mt-2 h-9" placeholder="comma separated: scalp, A+, revenge" />
                 </div>
 
                 <div>
                   <Label className="text-xs uppercase text-white/70">Notes</Label>
                   <Textarea value={annNotes} onChange={(e) => setAnnNotes(e.target.value)} className="mt-1 min-h-28" placeholder="What happened? What to improve next time?" />
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Checkbox id="reviewed" checked={annReviewed} onCheckedChange={(v) => setAnnReviewed(Boolean(v))} />
+                  <Label htmlFor="reviewed" className="text-sm text-white/80 flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-cyan-300" />
+                    Mark as reviewed
+                  </Label>
                 </div>
 
                 <div className="flex gap-2 justify-end">
@@ -415,6 +463,7 @@ export default function TradesPage() {
                         notes: annNotes,
                         setupType: annSetupType,
                         mistakeType: annMistakeType,
+                        reviewed: annReviewed,
                       });
                       toast.success('Annotation saved');
                       setSelectedTrade(null);

@@ -5,6 +5,7 @@ export const TradeAnnotationSchema = z.object({
   notes: z.string().default(''),
   setupType: z.string().default(''),
   mistakeType: z.string().default(''),
+  reviewed: z.boolean().default(false),
   updatedAt: z.number().optional(),
 });
 export type TradeAnnotation = z.infer<typeof TradeAnnotationSchema>;
