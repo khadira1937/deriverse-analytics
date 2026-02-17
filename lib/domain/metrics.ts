@@ -62,6 +62,8 @@ export const OrderTypePerfSchema = z.object({
   trades: z.number(),
   pnl: z.number(),
   winRate: z.number(),
+  avgDurationHours: z.number(),
+  avgFees: z.number(),
 });
 export type OrderTypePerf = z.infer<typeof OrderTypePerfSchema>;
 

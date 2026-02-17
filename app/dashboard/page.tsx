@@ -13,6 +13,7 @@ import { TimeOfDayChart } from '@/components/dashboard/time-of-day-chart';
 import { SessionPerformanceCard } from '@/components/dashboard/session-performance-card';
 import { FeeCompositionChart } from '@/components/dashboard/fee-composition-chart';
 import { CumulativeFeesChart } from '@/components/dashboard/cumulative-fees-chart';
+import { OrderTypeBreakdown } from '@/components/dashboard/order-type-breakdown';
 import { Card } from '@/components/ui/card';
 import { computeInsights } from '@/lib/insights/insights';
 import { InsightsPanel } from '@/components/dashboard/insights-panel';
@@ -332,6 +333,21 @@ export default function DashboardPage() {
             </Card>
           </motion.div>
         </div>
+
+        {/* Order Type Performance */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.66, duration: 0.3 }}
+        >
+          <Card className="glass-panel border-white/10 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-white">Order Type Performance</h2>
+              <div className="text-xs text-white/50">breakdown</div>
+            </div>
+            <OrderTypeBreakdown data={(metrics.orderTypePerformance as any) ?? []} />
+          </Card>
+        </motion.div>
 
         {/* Symbol Performance */}
         <motion.div

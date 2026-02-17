@@ -130,20 +130,29 @@ export function computeMetrics(trades: NormalizedTrade[], opts?: { startingEquit
   }
 
   // Order type performance
-  const orderMap = new Map<string, { trades: number; pnl: number; winRate: number; wins: number }>();
+  const orderMap = new Map<
+    string,
+    { trades: number; pnl: number; wins: number; durHours: number; fees: number }
+  >();
+
   for (const t of sorted) {
     const key = t.orderType;
-    const cur = orderMap.get(key) ?? { trades: 0, pnl: 0, winRate: 0, wins: 0 };
+    const cur = orderMap.get(key) ?? { trades: 0, pnl: 0, wins: 0, durHours: 0, fees: 0 };
     cur.trades += 1;
     cur.pnl += t.pnlUsd;
     cur.wins += t.pnlUsd > 0 ? 1 : 0;
+    cur.durHours += (t.durationSec ?? 0) / 3600;
+    cur.fees += t.feesUsd;
     orderMap.set(key, cur);
   }
+
   const orderTypePerformance = [...orderMap.entries()].map(([orderType, v]) => ({
     orderType,
     trades: v.trades,
     pnl: v.pnl,
     winRate: v.trades ? (v.wins / v.trades) * 100 : 0,
+    avgDurationHours: v.trades ? v.durHours / v.trades : 0,
+    avgFees: v.trades ? v.fees / v.trades : 0,
   }));
 
   // Time-of-day buckets (0..23) and sessions

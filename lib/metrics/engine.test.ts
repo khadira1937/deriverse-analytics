@@ -61,9 +61,9 @@ describe('computeMetrics', () => {
 
   it('computes order type performance', () => {
     const trades: NormalizedTrade[] = [
-      t({ id: '1', ts: new Date('2026-01-01T00:00:00Z'), pnlUsd: 5, orderType: 'limit' }),
-      t({ id: '2', ts: new Date('2026-01-02T00:00:00Z'), pnlUsd: -1, orderType: 'market' }),
-      t({ id: '3', ts: new Date('2026-01-03T00:00:00Z'), pnlUsd: 1, orderType: 'limit' }),
+      t({ id: '1', ts: new Date('2026-01-01T00:00:00Z'), pnlUsd: 5, orderType: 'limit', feesUsd: 1, durationSec: 3600 }),
+      t({ id: '2', ts: new Date('2026-01-02T00:00:00Z'), pnlUsd: -1, orderType: 'market', feesUsd: 2, durationSec: 7200 }),
+      t({ id: '3', ts: new Date('2026-01-03T00:00:00Z'), pnlUsd: 1, orderType: 'limit', feesUsd: 1, durationSec: 3600 }),
     ];
 
     const m = computeMetrics(trades);
@@ -72,5 +72,7 @@ describe('computeMetrics', () => {
     expect(limit?.trades).toBe(2);
     expect(limit?.pnl).toBe(6);
     expect(limit?.winRate).toBeCloseTo(100);
+    expect(limit?.avgDurationHours).toBeCloseTo(1);
+    expect(limit?.avgFees).toBeCloseTo(1);
   });
 });
