@@ -88,11 +88,11 @@
 
 ```mermaid
 flowchart LR
-  UI[UI - Next.js App Router] --> CTX[App context: symbol + date range + data mode]
+  UI[UI - Next.js App Router] --> CTX[App context (symbol, date range, data mode)]
   CTX --> HOOK[useTrades hook]
-  HOOK --> ADP[Adapters: Demo | CSV | On-chain]
+  HOOK --> ADP[Adapters (Demo, CSV, On-chain)]
   ADP --> NORM[NormalizedTrade list]
-  NORM --> MET[Metrics engine: computeMetrics]
+  NORM --> MET[Metrics engine (computeMetrics)]
   MET --> UI
 
   UI --> ANN[Trade annotations (localStorage)]
@@ -146,12 +146,32 @@ npm test
 
 ---
 
+## Metric accuracy (how calculations work)
+
+All analytics are computed from a single normalized trade model (`NormalizedTrade`) to keep charts, tables, and exports consistent across data sources.
+
+**Core definitions**
+- **Total PnL:** `Σ pnlUsd`
+- **Win rate:** `(winningTrades / totalTrades) * 100`
+- **Total fees:** `Σ feesUsd`
+- **Avg duration (hours):** `avg(durationSec / 3600)`
+- **Long/Short ratio:** `longTrades / shortTrades`
+- **Risk/Reward:** `avgWin / avgLoss` (absolute values)
+- **Equity curve:** starting equity baseline + cumulative PnL
+- **Drawdown (%):** `(peakEquity − equity) / peakEquity * 100`
+
+**Quality checks**
+- Key metric logic is covered by automated tests (Vitest).
+- The exported JSON report includes **active filters + KPI formulas** for transparency.
+
+---
+
 ## Security & privacy
 
 - **No private keys stored or requested**.
-- On-chain mode uses a **read-only address** (public key) to fetch/derive analytics.
-- Trade annotations are saved locally in the browser (**localStorage**) by design.
-- No funds are moved, no transactions are signed.
+- On-chain mode uses a **read-only address** (public key) for analysis.
+- Trade annotations are saved locally in the browser (**localStorage**).
+- No funds are moved, and no transactions are signed.
 
 ---
 
