@@ -41,31 +41,31 @@
 > All screenshots are from the deployed build and show real interactions (filters, exports, annotations).
 
 ### 1) Landing (Deriverse-first)
-![Landing](/public/images/landingpage.png)
+![Landing](/images/landingpage.png)
 
 ### 2) Dashboard overview (KPIs + charts)
-![Dashboard overview](/public/images/dashbordallDemo.png)
+![Dashboard overview](/images/dashbordallDemo.png)
 
 ### 3) Equity curve + drawdown visualization
-![Equity curve + drawdown](/public/images/Dadhbordequitycurveanddrawdown.png)
+![Equity curve + drawdown](/images/Dadhbordequitycurveanddrawdown.png)
 
 ### 4) Time-based analytics (time-of-day edge + session performance)
-![Time-based analytics](/public/images/dashbord-Time-of-dayEdge-sessioncards.png)
+![Time-based analytics](/images/dashbord-Time-of-dayEdge-sessioncards.png)
 
 ### 5) Fee analytics (composition + cumulative fees)
-![Fee analytics](/public/images/CumulativeFees.png)
+![Fee analytics](/images/CumulativeFees.png)
 
 ### 6) Order type performance analysis
-![Order type performance](/public/images/orderTypePerformance.png)
+![Order type performance](/images/orderTypePerformance.png)
 
 ### 7) Trade history table
-![Trade history](/public/images/tradeHistory.png)
+![Trade history](/images/tradeHistory.png)
 
 ### 8) Trade annotations (notes/tags/reviewed)
-![Trade annotations](/public/images/tradeAnnotations.png)
+![Trade annotations](/images/tradeAnnotations.png)
 
 ### 9) Reports exports (PDF/JSON/share + active filters)
-![Reports exports](/public/images/ReportsExports.png)
+![Reports exports](/images/ReportsExports.png)
 
 ---
 
