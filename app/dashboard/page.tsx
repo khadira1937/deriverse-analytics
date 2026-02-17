@@ -9,6 +9,8 @@ import { KPICard } from '@/components/dashboard/kpi-card';
 import { EquityCurveChart } from '@/components/dashboard/equity-curve-chart';
 import { DailyPnLChart } from '@/components/dashboard/daily-pnl-chart';
 import { SymbolPerformanceCard } from '@/components/dashboard/symbol-performance-card';
+import { TimeOfDayChart } from '@/components/dashboard/time-of-day-chart';
+import { SessionPerformanceCard } from '@/components/dashboard/session-performance-card';
 import { Card } from '@/components/ui/card';
 import { computeInsights } from '@/lib/insights/insights';
 import { InsightsPanel } from '@/components/dashboard/insights-panel';
@@ -255,11 +257,46 @@ export default function DashboardPage() {
           </Card>
         </motion.div>
 
+        {/* Time-based Performance */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.48, duration: 0.3 }}
+          >
+            <Card className="glass-panel border-white/10 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-white">Time-of-day Edge</h2>
+                <div className="text-xs text-white/50">PnL by hour</div>
+              </div>
+              <TimeOfDayChart data={metrics.timeOfDay ?? []} />
+            </Card>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.52, duration: 0.3 }}
+          >
+            <Card className="glass-panel border-white/10 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-white">Session Performance</h2>
+                <div className="text-xs text-white/50">00–23 local buckets</div>
+              </div>
+              {metrics.sessionPerformance ? (
+                <SessionPerformanceCard data={metrics.sessionPerformance as any} />
+              ) : (
+                <div className="text-sm text-white/60">No session data.</div>
+              )}
+            </Card>
+          </motion.div>
+        </div>
+
         {/* Symbol Performance */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5, duration: 0.3 }}
+          transition={{ delay: 0.56, duration: 0.3 }}
         >
           <Card className="glass-panel border-white/10 p-6">
             <h2 className="text-lg font-semibold text-white mb-4">Symbol Performance</h2>

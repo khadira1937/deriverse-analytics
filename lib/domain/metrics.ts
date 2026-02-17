@@ -68,14 +68,24 @@ export const TimeOfDayBucketSchema = z.object({
   hour: z.number().int().min(0).max(23),
   pnl: z.number(),
   trades: z.number(),
+  winRate: z.number(),
 });
 export type TimeOfDayBucket = z.infer<typeof TimeOfDayBucketSchema>;
 
+export const SessionBucketSchema = z.object({
+  pnl: z.number(),
+  trades: z.number(),
+  winRate: z.number(),
+  avgDurationHours: z.number(),
+  totalFees: z.number(),
+});
+export type SessionBucket = z.infer<typeof SessionBucketSchema>;
+
 export const SessionPerfSchema = z.object({
-  morning: z.object({ pnl: z.number(), trades: z.number() }),
-  afternoon: z.object({ pnl: z.number(), trades: z.number() }),
-  night: z.object({ pnl: z.number(), trades: z.number() }),
-  overnight: z.object({ pnl: z.number(), trades: z.number() }),
+  morning: SessionBucketSchema,
+  afternoon: SessionBucketSchema,
+  night: SessionBucketSchema,
+  overnight: SessionBucketSchema,
 });
 export type SessionPerf = z.infer<typeof SessionPerfSchema>;
 

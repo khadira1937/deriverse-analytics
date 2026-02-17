@@ -142,19 +142,22 @@ export function computeMetrics(trades: NormalizedTrade[], opts?: { startingEquit
     winRate: v.trades ? (v.wins / v.trades) * 100 : 0,
   }));
 
-  // Time-of-day heatmap buckets (0..23) and sessions
-  const hourBuckets = Array.from({ length: 24 }, (_, h) => ({ hour: h, pnl: 0, trades: 0 }));
+  // Time-of-day buckets (0..23) and sessions
+  const hourBuckets = Array.from({ length: 24 }, (_, h) => ({ hour: h, pnl: 0, trades: 0, wins: 0, winRate: 0 }));
   const sessionBuckets = {
-    morning: { pnl: 0, trades: 0 }, // 06-11
-    afternoon: { pnl: 0, trades: 0 }, // 12-17
-    night: { pnl: 0, trades: 0 }, // 18-23
-    overnight: { pnl: 0, trades: 0 }, // 00-05
+    morning: { pnl: 0, trades: 0, wins: 0, winRate: 0, durHours: 0, avgDurationHours: 0, totalFees: 0 }, // 06-11
+    afternoon: { pnl: 0, trades: 0, wins: 0, winRate: 0, durHours: 0, avgDurationHours: 0, totalFees: 0 }, // 12-17
+    night: { pnl: 0, trades: 0, wins: 0, winRate: 0, durHours: 0, avgDurationHours: 0, totalFees: 0 }, // 18-23
+    overnight: { pnl: 0, trades: 0, wins: 0, winRate: 0, durHours: 0, avgDurationHours: 0, totalFees: 0 }, // 00-05
   };
 
   for (const t of sorted) {
     const h = t.ts.getHours();
+    const isWin = t.pnlUsd > 0;
+
     hourBuckets[h].pnl += t.pnlUsd;
     hourBuckets[h].trades += 1;
+    hourBuckets[h].wins += isWin ? 1 : 0;
 
     const session =
       h >= 6 && h <= 11
@@ -167,6 +170,24 @@ export function computeMetrics(trades: NormalizedTrade[], opts?: { startingEquit
 
     sessionBuckets[session].pnl += t.pnlUsd;
     sessionBuckets[session].trades += 1;
+    sessionBuckets[session].wins += isWin ? 1 : 0;
+    sessionBuckets[session].durHours += (t.durationSec ?? 0) / 3600;
+    sessionBuckets[session].totalFees += t.feesUsd;
+  }
+
+  for (const b of hourBuckets) {
+    b.winRate = b.trades ? (b.wins / b.trades) * 100 : 0;
+    // drop internal
+    delete (b as any).wins;
+  }
+
+  for (const key of Object.keys(sessionBuckets) as Array<keyof typeof sessionBuckets>) {
+    const b = sessionBuckets[key];
+    b.winRate = b.trades ? (b.wins / b.trades) * 100 : 0;
+    b.avgDurationHours = b.trades ? b.durHours / b.trades : 0;
+    // drop internals
+    delete (b as any).wins;
+    delete (b as any).durHours;
   }
 
   // Directional bias
