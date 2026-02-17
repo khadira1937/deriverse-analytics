@@ -8,29 +8,7 @@ import { parseTradesCsv } from '@/lib/adapters/csv';
 import { fetchDeriverseTrades } from '@/lib/adapters/deriverse';
 import type { NormalizedTrade } from '@/lib/domain/trade';
 import { computeMetrics } from '@/lib/metrics/engine';
-
-export type TradeFilters = {
-  symbol?: string | null;
-  from?: Date;
-  to?: Date;
-  // Phase A: placeholder for later
-  side?: 'long' | 'short' | null;
-  orderType?: string | null;
-};
-
-function applyDateRange(trades: NormalizedTrade[], from?: Date, to?: Date) {
-  return trades.filter((t) => {
-    const ms = t.ts.getTime();
-    if (from && ms < from.getTime()) return false;
-    if (to && ms > to.getTime()) return false;
-    return true;
-  });
-}
-
-function applySymbol(trades: NormalizedTrade[], symbol?: string | null) {
-  if (!symbol) return trades;
-  return trades.filter((t) => t.symbol === symbol);
-}
+import { filterTrades } from '@/lib/selectors/filtered-trades';
 
 export function useTrades() {
   const {
@@ -128,8 +106,11 @@ export function useTrades() {
   }, [dataMode, solanaAddress, csvText, onChainRunId, setOnChainLoading]);
 
   const filteredTrades = useMemo(() => {
-    const afterSymbol = applySymbol(baseTrades, selectedSymbol);
-    return applyDateRange(afterSymbol, dateRange.from, dateRange.to);
+    return filterTrades(baseTrades, {
+      symbol: selectedSymbol,
+      from: dateRange.from,
+      to: dateRange.to,
+    });
   }, [baseTrades, selectedSymbol, dateRange.from, dateRange.to]);
 
   const metricsKey = useMemo(() => {
