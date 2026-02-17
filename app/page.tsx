@@ -41,7 +41,7 @@ const features = [
   {
     icon: Zap,
     title: 'Multi-Source Data',
-    desc: 'Support for demo datasets, CSV imports, and on-chain Solana wallet integration',
+    desc: 'Support for demo datasets, CSV imports, and on-chain Deriverse (Solana) wallet integration',
   },
   {
     icon: Shield,
@@ -85,19 +85,19 @@ export default function HomePage() {
         >
           <div className="inline-flex items-center gap-2 mb-6 px-4 py-2 rounded-full border border-cyan-400/30 bg-cyan-400/5">
             <Orbit className="w-4 h-4 text-cyan-400" />
-            <span className="text-xs font-medium text-cyan-400">For Solana Derivatives</span>
+            <span className="text-xs font-medium text-cyan-400">Built for Deriverse</span>
           </div>
 
           <h1 className="text-5xl lg:text-6xl font-bold text-white mb-6 text-balance">
             Professional Trading Analytics
             <span className="block text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">
-              for Solana Traders
+              for Deriverse Traders
             </span>
           </h1>
 
           <p className="text-lg text-white/60 mb-8 max-w-2xl mx-auto text-balance">
-            Track your trades, analyze performance, document lessons, and share reports.
-            Privacy-first platform with zero wallet permissions required.
+            A comprehensive trading journal + portfolio analytics for active Deriverse traders.
+            Track performance, analyze risk, and generate reports — privacy-first with read-only access.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -203,7 +203,7 @@ export default function HomePage() {
               <span className="font-bold text-white">Derivision</span>
             </div>
             <p className="text-sm text-white/60">
-              Privacy-first trading analytics for Solana. Built with ❤️ for traders.
+              Privacy-first trading analytics for Deriverse (on Solana).
             </p>
           </div>
         </div>
