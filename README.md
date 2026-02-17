@@ -88,20 +88,30 @@
 
 ```mermaid
 flowchart LR
-  UI[UI - Next.js App Router] --> CTX[App context (symbol, date range, data mode)]
-  CTX --> HOOK[useTrades hook]
-  HOOK --> ADP[Adapters (Demo, CSV, On-chain)]
-  ADP --> NORM[NormalizedTrade list]
-  NORM --> MET[Metrics engine (computeMetrics)]
+  UI[Next.js UI] --> CTX[App context]
+  CTX --> HOOK[useTrades]
+  HOOK --> ADP[Trade adapters]
+  ADP --> NORM[Normalized trades]
+  NORM --> MET[Metrics engine]
   MET --> UI
 
-  UI --> ANN[Trade annotations (localStorage)]
+  UI --> ANN[Local annotations]
 
-  subgraph ONCHAIN[On-chain mode]
+  subgraph ONCHAIN[On chain]
     RPC[Solana RPC] --> SDK[Deriverse kit]
     SDK --> ADP
   end
 ```
+
+<details>
+<summary>What each block does</summary>
+
+- **App context**: stores global filters (symbol, date range, data mode).
+- **Trade adapters**: load trades from Demo / CSV / On-chain and convert them into the same normalized format.
+- **Metrics engine**: computes KPIs + charts from normalized trades.
+- **Local annotations**: per-trade notes/tags/reviewed stored in localStorage.
+
+</details>
 
 **Key idea:** everything runs on a **normalized trade model**, so charts/tables/reports stay consistent across data sources.
 
