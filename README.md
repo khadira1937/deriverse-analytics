@@ -3,7 +3,7 @@
 **A comprehensive trading analytics solution for Deriverse**: professional trading journal + portfolio/performance analytics for active traders.
 
 - Live demo: https://deriverse-analytics-v1tz.vercel.app/
-- Demo video (60s): https://youtu.be/N8A51XDhgWE
+- Demo video : https://youtu.be/N8A51XDhgWE
 - X (Twitter): https://x.com/KhadiraOussama
 
 ---
