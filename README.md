@@ -7,14 +7,13 @@
 
 ---
 
-## Why this submission wins (mapped to judging criteria)
+## Highlights
 
-- **Comprehensiveness**: covers the full bounty scope end-to-end (KPIs, charts, filters, fees, time-based metrics, reports, journal, trade history + annotations).
-- **Accuracy**: metrics are computed from a normalized trade model; the exported JSON report includes **filter metadata + KPI formulas**.
-- **Clarity & readability**: trader-first layout (global filters, KPI grid, explainable tooltips, clean visual hierarchy).
-- **Innovation**: “Insights” panel + time-of-day/session edge analysis + fee drag signal.
-- **Code quality**: typed domain models, isolated metric engine, composable UI components, tests for key metrics.
-- **Security**: **no private keys**, read-only address input, annotations stored locally (localStorage), privacy-first design.
+- **Comprehensive scope coverage**: KPIs, charts, global filters, fees, time-based metrics, reports, journal, and trade history with annotations.
+- **Accuracy-focused**: metrics computed from a normalized trade model; JSON report export includes **filters + KPI formulas**.
+- **Trader-first UX**: clear hierarchy (KPI grid → charts → breakdowns), tooltips, and consistent global filters.
+- **Bonus insights**: time-of-day + session edge analysis and behavioral insights.
+- **Security & privacy**: **no private keys**, read-only address analysis, annotations stored locally (localStorage).
 
 ---
 
@@ -41,31 +40,31 @@
 > All screenshots are from the deployed build and show real interactions (filters, exports, annotations).
 
 ### 1) Landing (Deriverse-first)
-![Landing](/images/landingpage.png)
+![Landing](public/images/landingpage.png)
 
 ### 2) Dashboard overview (KPIs + charts)
-![Dashboard overview](/images/dashbordallDemo.png)
+![Dashboard overview](public/images/dashbordallDemo.png)
 
 ### 3) Equity curve + drawdown visualization
-![Equity curve + drawdown](/images/Dadhbordequitycurveanddrawdown.png)
+![Equity curve + drawdown](public/images/Dadhbordequitycurveanddrawdown.png)
 
 ### 4) Time-based analytics (time-of-day edge + session performance)
-![Time-based analytics](/images/dashbord-Time-of-dayEdge-sessioncards.png)
+![Time-based analytics](public/images/dashbord-Time-of-dayEdge-sessioncards.png)
 
 ### 5) Fee analytics (composition + cumulative fees)
-![Fee analytics](/images/CumulativeFees.png)
+![Fee analytics](public/images/CumulativeFees.png)
 
 ### 6) Order type performance analysis
-![Order type performance](/images/orderTypePerformance.png)
+![Order type performance](public/images/orderTypePerformance.png)
 
 ### 7) Trade history table
-![Trade history](/images/tradeHistory.png)
+![Trade history](public/images/tradeHistory.png)
 
 ### 8) Trade annotations (notes/tags/reviewed)
-![Trade annotations](/images/tradeAnnotations.png)
+![Trade annotations](public/images/tradeAnnotations.png)
 
 ### 9) Reports exports (PDF/JSON/share + active filters)
-![Reports exports](/images/ReportsExports.png)
+![Reports exports](public/images/ReportsExports.png)
 
 ---
 
@@ -89,17 +88,17 @@
 
 ```mermaid
 flowchart LR
-  UI[Next.js App Router UI] --> CTX[Global App Context\n(symbol, date range, data mode)]
-  CTX --> HOOK[useTrades()]
-  HOOK --> ADP[Adapters\nDemo / CSV / On-chain]
-  ADP --> NORM[NormalizedTrade[]]
-  NORM --> MET[Metrics Engine\ncomputeMetrics()] 
+  UI[UI - Next.js App Router] --> CTX[App context: symbol + date range + data mode]
+  CTX --> HOOK[useTrades hook]
+  HOOK --> ADP[Adapters: Demo | CSV | On-chain]
+  ADP --> NORM[NormalizedTrade list]
+  NORM --> MET[Metrics engine: computeMetrics]
   MET --> UI
 
-  UI --> ANN[Trade Annotations\nlocalStorage]
+  UI --> ANN[Trade annotations (localStorage)]
 
-  subgraph On-chain (optional)
-    RPC[Solana RPC] --> SDK[@deriverse/kit]
+  subgraph ONCHAIN[On-chain mode]
+    RPC[Solana RPC] --> SDK[Deriverse kit]
     SDK --> ADP
   end
 ```
@@ -153,15 +152,6 @@ npm test
 - On-chain mode uses a **read-only address** (public key) to fetch/derive analytics.
 - Trade annotations are saved locally in the browser (**localStorage**) by design.
 - No funds are moved, no transactions are signed.
-
----
-
-## Short demo video
-
-For the submission page we recommend adding a 30–60s walkthrough (Dashboard → Filters → Trades annotations → Reports export).
-
-- Demo URL: https://deriverse-analytics-v1tz.vercel.app/
-- If you record a Loom/MP4, add the link here: **(add link)**
 
 ---
 
