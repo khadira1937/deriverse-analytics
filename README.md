@@ -1,479 +1,172 @@
-# TradeAnalytics - Premium Solana Trading Dashboard
+# Derivision — Deriverse Trading Analytics
 
-> **Professional fintech trading analytics for Solana derivatives traders**
+**A comprehensive trading analytics solution for Deriverse**: professional trading journal + portfolio/performance analytics for active traders.
 
-A production-ready, full-featured trading analytics dashboard built for the **Deriverse bounty**. Designed with premium dark fintech aesthetics, neon accents, and comprehensive trade analysis tools.
-
-![Status](https://img.shields.io/badge/status-production%20ready-green)
-![Version](https://img.shields.io/badge/version-1.0.0-blue)
-![License](https://img.shields.io/badge/license-MIT-brightgreen)
+- Live demo: https://deriverse-analytics-v1tz.vercel.app/
+- X (Twitter): https://x.com/KhadiraOussama
 
 ---
 
-## 🎯 What's Included
+## Why this submission wins (mapped to judging criteria)
 
-### 6 Complete Pages
-- **Landing** (`/`) - Hero with feature overview
-- **Dashboard** (`/dashboard`) - Main analytics hub with 12 KPIs
-- **Trades** (`/trades`) - Advanced trade history table (150+ trades)
-- **Journal** (`/journal`) - Trading journal with analytics
-- **Reports** (`/reports`) - Report generator with exports
-- **Settings** (`/settings`) - User preferences & toggles
-
-### Key Features
-✅ **12 KPI Cards** - Total PnL, Win Rate, Risk Metrics, etc.
-✅ **Interactive Charts** - Equity curves, daily P&L, symbol performance
-✅ **Advanced Filters** - Side, outcome, order type, symbol
-✅ **Data Exports** - CSV (trades), JSON (reports)
-✅ **Animated Grid** - 3D perspective background (toggleable)
-✅ **Dark Fintech Theme** - Cyan/purple neon accents
-✅ **Responsive Design** - Mobile, tablet, desktop optimized
-✅ **150+ Mock Trades** - Pre-populated for screenshots
-✅ **Data Mode Switch** - Demo/CSV/On-chain (stubs ready)
-✅ **Glass Panels** - Semi-transparent UI with blur effects
+- **Comprehensiveness**: covers the full bounty scope end-to-end (KPIs, charts, filters, fees, time-based metrics, reports, journal, trade history + annotations).
+- **Accuracy**: metrics are computed from a normalized trade model; the exported JSON report includes **filter metadata + KPI formulas**.
+- **Clarity & readability**: trader-first layout (global filters, KPI grid, explainable tooltips, clean visual hierarchy).
+- **Innovation**: “Insights” panel + time-of-day/session edge analysis + fee drag signal.
+- **Code quality**: typed domain models, isolated metric engine, composable UI components, tests for key metrics.
+- **Security**: **no private keys**, read-only address input, annotations stored locally (localStorage), privacy-first design.
 
 ---
 
-## 🚀 Quick Start
+## Bounty scope checklist ✅ (1:1 with requirements)
+
+- ✅ **Total PnL tracking** with visual indicators (KPI + equity curve)
+- ✅ **Trading volume & fee analysis** (KPIs + fee analytics)
+- ✅ **Win rate & trade count** metrics
+- ✅ **Average trade duration** calculations
+- ✅ **Long/Short ratio** + directional bias tracking
+- ✅ **Largest gain/loss** + **avg win/loss** for risk management
+- ✅ **Symbol filtering** + **global date range selection** (applies across pages, end-date inclusive)
+- ✅ **Historical PnL** charts + **drawdown visualization**
+- ✅ **Time-based performance**: daily + **time-of-day** + **session-based** breakdown
+- ✅ **Detailed trade history table** (sorting/pagination/filters/search) + **annotation capabilities** (tags/notes/reviewed)
+- ✅ **Fee composition breakdown** + **cumulative fee tracking**
+- ✅ **Order type performance analysis** (PnL/win rate/duration/fees by order type)
+- ✅ **Reports**: JSON export (includes filters + formulas) + PDF via Print → “Save as PDF”
+
+---
+
+## Screenshots (curated)
+
+> All screenshots are from the deployed build and show real interactions (filters, exports, annotations).
+
+### 1) Landing (Deriverse-first)
+![Landing](/public/images/landingpage.png)
+
+### 2) Dashboard overview (KPIs + charts)
+![Dashboard overview](/public/images/dashbordallDemo.png)
+
+### 3) Equity curve + drawdown visualization
+![Equity curve + drawdown](/public/images/Dadhbordequitycurveanddrawdown.png)
+
+### 4) Time-based analytics (time-of-day edge + session performance)
+![Time-based analytics](/public/images/dashbord-Time-of-dayEdge-sessioncards.png)
+
+### 5) Fee analytics (composition + cumulative fees)
+![Fee analytics](/public/images/CumulativeFees.png)
+
+### 6) Order type performance analysis
+![Order type performance](/public/images/orderTypePerformance.png)
+
+### 7) Trade history table
+![Trade history](/public/images/tradeHistory.png)
+
+### 8) Trade annotations (notes/tags/reviewed)
+![Trade annotations](/public/images/tradeAnnotations.png)
+
+### 9) Reports exports (PDF/JSON/share + active filters)
+![Reports exports](/public/images/ReportsExports.png)
+
+---
+
+## Product overview
+
+### Pages
+- **Dashboard**: KPI grid + equity curve/drawdown + daily P&L + time-of-day + sessions + fees + order types + symbol performance
+- **Trades**: advanced trade table + export + per-trade annotations
+- **Journal**: structured entries (setup, confidence, mistake tags) + journal analytics
+- **Reports**: filter-aware export (JSON + formulas, PDF via print)
+- **Settings**: display preferences + privacy/security notes
+
+### Global filters (applies across pages)
+- Data mode: **Demo / CSV / On-chain**
+- **Symbol filter**
+- **Date range** (inclusive end date)
+
+---
+
+## Architecture (high-level)
+
+```mermaid
+flowchart LR
+  UI[Next.js App Router UI] --> CTX[Global App Context\n(symbol, date range, data mode)]
+  CTX --> HOOK[useTrades()]
+  HOOK --> ADP[Adapters\nDemo / CSV / On-chain]
+  ADP --> NORM[NormalizedTrade[]]
+  NORM --> MET[Metrics Engine\ncomputeMetrics()] 
+  MET --> UI
+
+  UI --> ANN[Trade Annotations\nlocalStorage]
+
+  subgraph On-chain (optional)
+    RPC[Solana RPC] --> SDK[@deriverse/kit]
+    SDK --> ADP
+  end
+```
+
+**Key idea:** everything runs on a **normalized trade model**, so charts/tables/reports stay consistent across data sources.
+
+---
+
+## Run locally
 
 ### Prerequisites
-- Node.js 18+ 
-- pnpm (recommended) or npm
+- Node.js 18+ (20+ recommended)
 
-### Install & Run
+### Install & dev
 ```bash
-# Install dependencies
-pnpm install
-
-# Start development server
-pnpm dev
-
-# Open http://localhost:3000
-```
-
-### Build for Production
-```bash
-# Build
-pnpm build
-
-# Start server
-pnpm start
-
-# Or deploy to Vercel
-vercel
-```
-
----
-
-## 📊 Dashboard Features
-
-### Main Dashboard (`/dashboard`)
-The centerpiece - fully populated with mock data ready for screenshots.
-
-**12 KPI Cards:**
-- Total PnL with trend indicator
-- Win Rate (%)
-- Trade Count
-- Total Volume
-- Total Fees
-- Avg Trade Duration
-- Long/Short Ratio
-- Largest Gain/Loss
-- Avg Win/Loss
-- Risk/Reward Ratio
-
-**Charts:**
-- Equity Curve (area chart with gradient)
-- Daily P&L (color-coded bars with best/worst day)
-- Symbol Performance (top winners/losers tables)
-
----
-
-## 🛠️ Tech Stack
-
-```
-Frontend:       Next.js 16 (App Router) + TypeScript
-Styling:        Tailwind CSS + Custom Dark Theme
-UI Components:  shadcn/ui + Custom fintech styles
-Charts:         Recharts (lightweight, optimized)
-Tables:         TanStack React Table (advanced filtering)
-Animations:     Framer Motion (GPU-accelerated, subtle)
-Notifications:  Sonner (dark theme toasts)
-Icons:          Lucide React
-State:          React Context + useContext
-```
-
----
-
-## 📁 Project Structure
-
-```
-app/
-├── layout.tsx              # Root layout with providers
-├── page.tsx               # Landing page
-├── globals.css            # Dark theme + animations
-├── dashboard/page.tsx     # Main KPI dashboard
-├── trades/page.tsx        # Trade table with filters
-├── journal/page.tsx       # Journal entries
-├── reports/page.tsx       # Report generator
-└── settings/page.tsx      # User settings
-
-components/
-├── layout/
-│   ├── header.tsx         # Global header
-│   ├── logo.tsx           # Animated logo
-│   └── grid-background.tsx # 3D grid animation
-├── dashboard/
-│   ├── kpi-card.tsx       # KPI display
-│   ├── equity-curve-chart.tsx
-│   ├── daily-pnl-chart.tsx
-│   └── symbol-performance-card.tsx
-└── ui/
-    └── data-table.tsx     # Advanced table wrapper
-
-lib/
-├── types.ts               # TypeScript interfaces
-├── context/app-context.tsx  # Global state
-└── mock/
-    ├── trades.ts          # 150 trade records
-    ├── kpis.ts            # KPI calculations
-    └── journal.ts         # 30+ journal entries
-```
-
----
-
-## 🎨 Design System
-
-### Color Palette
-| Color | Hex | Usage |
-|-------|-----|-------|
-| Primary Accent | #00ffff | CTAs, highlights |
-| Background | #050505 | Main background |
-| Card | #0a0a0a | Card backgrounds |
-| Text Primary | #ffffff | Main text |
-| Text Secondary | #ffffff99 | Muted text |
-| Success | #10b981 | Green (profits) |
-| Danger | #ef4444 | Red (losses) |
-
-### Component Classes
-- `.glass-panel` - Semi-transparent card with blur
-- `.neon-accent` - Cyan text with glow
-- `.neon-accent-hover` - Interactive highlight
-- `.neon-glow` - Box shadow glow effect
-
----
-
-## 📈 Mock Data
-
-All pages come pre-populated with realistic mock data:
-
-**Trades**: 150 realistic trades across 6 symbols (SOL, BTC, ETH, JUP, RAY, ORCA)
-- Random entry/exit prices
-- Realistic PnL values
-- Fee calculations
-- Various order types
-
-**KPIs**: Auto-calculated from trades
-- Total PnL: $2,345.67
-- Win Rate: 58.3%
-- Trade Count: 150
-- etc.
-
-**Charts**: 30+ days of daily P&L data
-
-**Journal**: 30 sample entries with various setups and mistakes
-
----
-
-## 🌐 Global Header
-
-Located on every page:
-
-```
-[Logo] [Nav Links] [⚙️ Settings]
-Data: [Demo] [CSV] [On-chain] | [SOL Address] | [Symbol ▼] | [📅 Date]
-```
-
-**Features:**
-- Active page highlighting
-- Data mode switcher (functional)
-- Solana address validation
-- Symbol filter dropdown
-- Date range picker (UI placeholder)
-
----
-
-## 📱 Responsive Design
-
-| Device | Columns | Layout |
-|--------|---------|--------|
-| Mobile (<640px) | 1 | Stacked, compact |
-| Tablet (640-1024px) | 2 | Grid, medium |
-| Desktop (>1024px) | 3-4 | Full featured |
-
-All components tested and optimized for each breakpoint.
-
----
-
-## 📊 Features Detail
-
-### Trades Page
-- **150 trades** in filterable, sortable table
-- **10 columns**: Time, Symbol, Side, Size, Entry, Exit, PnL, Fees, Duration, Type
-- **Filters**: Side (Long/Short), Outcome (Win/Loss), Order Type, Symbol
-- **Pagination**: 15 trades per page
-- **Export**: CSV download (functional)
-
-### Journal Page
-- **New Entry Modal**: Title, Setup Type, Confidence, Notes
-- **Analytics Cards**: Total entries, avg confidence, best setup, common mistakes
-- **Entry List**: 30+ entries showing all details
-- **Form Validation**: Required fields
-
-### Reports Page
-- **Report Generator**: Date range filters
-- **Preview Sections**: Performance summary, top winners, risk metrics
-- **Exports**: PDF (UI), JSON (functional), Share Link (copyable)
-
-### Settings Page
-- **Visual Settings**: Theme, grid background, compact mode toggles
-- **Display Settings**: Decimal places, currency dropdowns
-- **Data Mode Guide**: Explanation of all 3 modes
-- **Security Info**: Privacy messaging, no keys stored
-
----
-
-## 🎯 Data Modes (Stubs Ready)
-
-### Demo Dataset ✅ (Fully Functional)
-- Uses mock data
-- All features enabled
-- Perfect for screenshots
-
-### CSV Import 🚧 (UI Ready)
-- File input ready
-- Format example provided
-- Backend integration placeholder
-- Button disabled (shows example)
-
-### On-chain Data 🚧 (UI Ready)
-- Connection flow designed
-- Solana address validation ready
-- Backend integration placeholder
-- Button disabled (stub mode)
-
-All modes show appropriate toast notifications and update global state.
-
----
-
-## 🔐 Security & Privacy
-
-✅ **No private keys stored or requested**
-✅ **Client-side data processing**
-✅ **Read-only wallet connection model**
-✅ **HTTPS ready for deployment**
-✅ **Security headers configured**
-
-See `/settings` page for full privacy documentation.
-
----
-
-## ⚡ Performance
-
-- **Bundle Size**: ~250KB (gzipped)
-- **LCP**: <2.5s (Vercel)
-- **FID**: <100ms
-- **CLS**: <0.1
-
-### Optimizations Included
-- Code splitting per route
-- Lazy loading components
-- Dynamic imports
-- CSS minification
-- Image optimization ready
-- Lightweight animations
-
----
-
-## 📚 Documentation
-
-| File | Purpose |
-|------|---------|
-| `QUICKSTART.md` | Get started in 3 steps |
-| `TRADING_DASHBOARD.md` | Full feature documentation |
-| `FEATURES.md` | Visual feature showcase |
-| `IMPLEMENTATION_SUMMARY.md` | Technical details |
-| `DEPLOYMENT.md` | Deploy to production |
-
-**Start here**: Read `QUICKSTART.md` for fastest onboarding.
-
----
-
-## 🚀 Deployment
-
-### One-Click Vercel Deploy
-```bash
-vercel
-```
-
-### Manual GitHub Deploy
-1. Push to GitHub
-2. Connect to Vercel
-3. Auto-deploys on push
-
-### Custom Domain
-1. Vercel Dashboard → Settings → Domains
-2. Add your domain
-3. SSL auto-issued
-
-See `DEPLOYMENT.md` for detailed instructions.
-
----
-
-## 🔮 Future Enhancements
-
-- [ ] Real Solana wallet integration
-- [ ] CSV trade parser
-- [ ] PDF report generation
-- [ ] Database persistence (Supabase/Firebase)
-- [ ] User authentication
-- [ ] Cloud sync & backups
-- [ ] Real-time price feeds
-- [ ] Alerts & notifications
-- [ ] Dark/light theme toggle
-- [ ] Mobile app
-
----
-
-## 🛠️ Development
-
-### Start Dev Server
-```bash
-pnpm dev
+npm install
+npm run dev
+# open http://localhost:3000
 ```
 
 ### Build
 ```bash
-pnpm build
+npm run build
+npm run start
 ```
 
-### Lint
+### Tests
 ```bash
-pnpm lint
-```
-
-### Type Check
-```bash
-tsc --noEmit
+npm test
 ```
 
 ---
 
-## 📦 Dependencies
+## Data modes
 
-**Key Packages:**
-- `next@16.1.6` - React framework
-- `react@19.2.3` - UI library
-- `tailwindcss@3.4.17` - Styling
-- `framer-motion@11.0.3` - Animations
-- `recharts@2.15.0` - Charts
-- `@tanstack/react-table@8.17.3` - Tables
-- `sonner@1.7.1` - Toasts
-- `lucide-react@0.544.0` - Icons
+### Demo (recommended for judging)
+- Fully populated deterministic dataset for consistent screenshots.
 
-**Full list**: See `package.json`
+### CSV Import
+- Paste/import your trade history via CSV to compute the same analytics locally.
+
+### On-chain (Deriverse on Solana)
+- Read-only address analysis (no wallet permissions).
+- Uses Solana RPC + Deriverse SDK. Configure env vars on Vercel or locally.
 
 ---
 
-## 🎓 Learning Resources
+## Security & privacy
 
-- [Next.js Docs](https://nextjs.org/docs)
-- [React Docs](https://react.dev)
-- [Tailwind CSS](https://tailwindcss.com)
-- [Recharts Examples](https://recharts.org)
-- [TanStack Table](https://tanstack.com/table)
-- [Framer Motion](https://www.framer.com/motion)
+- **No private keys stored or requested**.
+- On-chain mode uses a **read-only address** (public key) to fetch/derive analytics.
+- Trade annotations are saved locally in the browser (**localStorage**) by design.
+- No funds are moved, no transactions are signed.
 
 ---
 
-## 📞 Support
+## Short demo video
 
-### Documentation
-- `QUICKSTART.md` - Get started
-- `TRADING_DASHBOARD.md` - Features
-- `DEPLOYMENT.md` - Production guide
+For the submission page we recommend adding a 30–60s walkthrough (Dashboard → Filters → Trades annotations → Reports export).
 
-### Community
-- [Vercel Discord](https://vercel.com/discord)
-- [Next.js Discussions](https://github.com/vercel/next.js/discussions)
+- Demo URL: https://deriverse-analytics-v1tz.vercel.app/
+- If you record a Loom/MP4, add the link here: **(add link)**
 
 ---
 
-## 📝 License
+## Submission links
 
-MIT License - See LICENSE file for details.
-
----
-
-## 🙏 Acknowledgments
-
-Built as submission for **Deriverse bounty** - Premium trading analytics for Solana.
-
-- Inspired by professional fintech UIs
-- Optimized for trader workflows
-- Privacy-first design principles
-- Production-ready code quality
-
----
-
-## 🎯 What Makes This Special
-
-✨ **Complete**: 6 pages, 12 KPIs, multiple charts, full filtering
-✨ **Beautiful**: Dark fintech aesthetic with neon accents
-✨ **Fast**: Optimized animations and charts
-✨ **Responsive**: Works perfectly on all devices
-✨ **Documented**: 5 comprehensive guides
-✨ **Ready**: Fully populated with mock data for screenshots
-✨ **Deployed**: One-click Vercel deployment
-✨ **Professional**: Enterprise-grade code quality
-
----
-
-## 📸 Screenshots Ready
-
-All pages include:
-- ✅ Populated mock data
-- ✅ Realistic trade history
-- ✅ Functioning charts and tables
-- ✅ Working filters and exports
-- ✅ Responsive layouts
-- ✅ Complete UI flows
-
-Perfect for:
-- Pitching to investors
-- Product demos
-- Bounty submissions
-- Portfolio showcase
-
----
-
-## 🚀 Deploy Now
-
-```bash
-# Install dependencies
-pnpm install
-
-# Start dev server
-pnpm dev
-
-# Or deploy to Vercel
-vercel
-```
-
-**Live at**: http://localhost:3000 (local) or `your-project.vercel.app` (production)
-
----
-
-**Built with ❤️ for Solana traders**
-
-*Premium analytics. Privacy first. Zero setup.*
+- **GitHub repo:** (this repository)
+- **Live demo:** https://deriverse-analytics-v1tz.vercel.app/
+- **X (Twitter):** https://x.com/KhadiraOussama
