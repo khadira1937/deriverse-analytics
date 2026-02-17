@@ -50,6 +50,10 @@ describe('computeMetrics', () => {
 
     const m = computeMetrics(trades);
     expect(m.feeComposition?.total).toBeCloseTo(0.6);
+    expect(m.feeComposition?.other).toBeCloseTo(0.6);
+    expect(m.feeComposition?.maker).toBeCloseTo(0);
+    expect(m.feeComposition?.taker).toBeCloseTo(0);
+    expect(m.feeComposition?.funding).toBeCloseTo(0);
     expect(m.cumulativeFeesByDay).toHaveLength(2);
     expect(m.cumulativeFeesByDay?.[0].cumFees).toBeCloseTo(0.3);
     expect(m.cumulativeFeesByDay?.[1].cumFees).toBeCloseTo(0.6);

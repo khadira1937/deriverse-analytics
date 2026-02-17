@@ -11,6 +11,8 @@ import { DailyPnLChart } from '@/components/dashboard/daily-pnl-chart';
 import { SymbolPerformanceCard } from '@/components/dashboard/symbol-performance-card';
 import { TimeOfDayChart } from '@/components/dashboard/time-of-day-chart';
 import { SessionPerformanceCard } from '@/components/dashboard/session-performance-card';
+import { FeeCompositionChart } from '@/components/dashboard/fee-composition-chart';
+import { CumulativeFeesChart } from '@/components/dashboard/cumulative-fees-chart';
 import { Card } from '@/components/ui/card';
 import { computeInsights } from '@/lib/insights/insights';
 import { InsightsPanel } from '@/components/dashboard/insights-panel';
@@ -287,6 +289,45 @@ export default function DashboardPage() {
                 <SessionPerformanceCard data={metrics.sessionPerformance as any} />
               ) : (
                 <div className="text-sm text-white/60">No session data.</div>
+              )}
+            </Card>
+          </motion.div>
+        </div>
+
+        {/* Fees Analytics */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.58, duration: 0.3 }}
+          >
+            <Card className="glass-panel border-white/10 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-white">Fee Composition</h2>
+                <div className="text-xs text-white/50">maker / taker / funding</div>
+              </div>
+              {metrics.feeComposition ? (
+                <FeeCompositionChart data={metrics.feeComposition as any} />
+              ) : (
+                <div className="text-sm text-white/60">No fee composition data.</div>
+              )}
+            </Card>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.62, duration: 0.3 }}
+          >
+            <Card className="glass-panel border-white/10 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-white">Cumulative Fees</h2>
+                <div className="text-xs text-white/50">fees over time</div>
+              </div>
+              {metrics.cumulativeFeesByDay ? (
+                <CumulativeFeesChart data={metrics.cumulativeFeesByDay as any} />
+              ) : (
+                <div className="text-sm text-white/60">No cumulative fee series.</div>
               )}
             </Card>
           </motion.div>

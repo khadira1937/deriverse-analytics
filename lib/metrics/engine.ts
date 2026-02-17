@@ -109,10 +109,14 @@ export function computeMetrics(trades: NormalizedTrade[], opts?: { startingEquit
     }))
     .sort((a, b) => b.pnl - a.pnl);
 
-  // Fee composition (best-effort; until on-chain provides maker/taker, keep under "other")
-  const makerFees = 0;
-  const takerFees = 0;
-  const otherFees = totalFees;
+  // Fee composition (best-effort)
+  // If fee breakdown exists (demo mode or enriched sources), aggregate it.
+  // Otherwise, keep everything under "other".
+  const makerFees = sorted.reduce((s, t) => s + (t.feeMakerUsd ?? 0), 0);
+  const takerFees = sorted.reduce((s, t) => s + (t.feeTakerUsd ?? 0), 0);
+  const fundingFees = sorted.reduce((s, t) => s + (t.feeFundingUsd ?? 0), 0);
+  const derived = makerFees + takerFees + fundingFees;
+  const otherFees = Math.max(0, totalFees - derived);
 
   // Cumulative fees series per day
   let cumFees = 0;
@@ -226,6 +230,7 @@ export function computeMetrics(trades: NormalizedTrade[], opts?: { startingEquit
     feeComposition: {
       maker: makerFees,
       taker: takerFees,
+      funding: fundingFees,
       other: otherFees,
       total: totalFees,
     },

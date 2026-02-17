@@ -45,6 +45,7 @@ export type SymbolPerf = z.infer<typeof SymbolPerfSchema>;
 export const FeeCompositionSchema = z.object({
   maker: z.number(),
   taker: z.number(),
+  funding: z.number(),
   other: z.number(),
   total: z.number(),
 });

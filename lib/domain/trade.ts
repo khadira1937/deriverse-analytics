@@ -17,7 +17,14 @@ export const NormalizedTradeSchema = z.object({
   exitPrice: z.number().nullable(),
   size: z.number().nullable(),
   pnlUsd: z.number(),
+
+  // Fees
   feesUsd: z.number(),
+  // Optional fee breakdown (useful for analytics even when data comes from mock/CSV)
+  feeMakerUsd: z.number().optional(),
+  feeTakerUsd: z.number().optional(),
+  feeFundingUsd: z.number().optional(),
+
   durationSec: z.number().nullable(),
   tags: z.array(z.string()).default([]),
   notes: z.string().default(''),
